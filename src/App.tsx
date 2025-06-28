@@ -6,7 +6,7 @@ import Login from './pages/Login';
 // import ForgotPassword from './pages/ForgotPassword';
 // import Onboarding from './pages/Onboarding';
 import 'react-toastify/dist/ReactToastify.css';
-// import Sidebar from './components/Sidebar';
+import Sidebar from './components/Sidebar';
 // import Header from './components/Header';
 import { AuthProvider } from './AuthContext';
 
@@ -14,7 +14,7 @@ const MainLayout: React.FC = () => {
   return (
    <div className="flex min-h-screen">
       {/* Sidebar (visible on all screens) */}
-      {/* <Sidebar /> */}
+      <Sidebar />
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
