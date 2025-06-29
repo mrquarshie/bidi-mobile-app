@@ -1,16 +1,16 @@
 import React from 'react';
-import { BellFilled, UserOutlined } from '@ant-design/icons';
-import { Badge, Dropdown, Menu, Avatar, Typography } from 'antd';
+import { BellFilled, UserOutlined, SearchOutlined } from '@ant-design/icons';
+import { Badge, Dropdown, Menu, Avatar, Typography, Input } from 'antd';
 import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 
 const Header: React.FC = () => {
-  const userName = 'John Dough';
-  const userEmail = 'john.dough@example.com'; 
-  const userRole = 'Personnel';
+  const userName = 'John Doe';
+  const userEmail = 'john.doe@example.com';
+  const userRole = 'Admin';
 
-  // Notification Dropdown Content
+  // Notification Dropdown Content (Unchanged)
   const notificationMenu = (
     <div className="w-80 bg-white shadow-lg rounded-lg p-4 max-h-96 overflow-y-auto">
       <div className="flex justify-between items-center mb-3">
@@ -20,7 +20,6 @@ const Header: React.FC = () => {
         </Text>
       </div>
       <div className="space-y-3">
-        {/* Notification Item 1 */}
         <div className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-md">
           <Avatar
             size={32}
@@ -35,7 +34,6 @@ const Header: React.FC = () => {
             <Text type="secondary" className="text-xs">5 minutes ago</Text>
           </div>
         </div>
-        {/* Notification Item 2 */}
         <div className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-md">
           <Avatar
             size={32}
@@ -45,12 +43,11 @@ const Header: React.FC = () => {
           <div>
             <Text className="text-sm">Profile Update Required</Text>
             <Text type="secondary" className="text-xs block">
-              Please update your NSS number in your profile.
+              Please update your details in your profile.
             </Text>
             <Text type="secondary" className="text-xs">1 hour ago</Text>
           </div>
         </div>
-        {/* Notification Item 3 */}
         <div className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-md">
           <Avatar
             size={32}
@@ -74,7 +71,7 @@ const Header: React.FC = () => {
     </div>
   );
 
-  // Profile Dropdown Content
+  // Profile Dropdown Content (Unchanged)
   const profileMenu = (
     <div className="w-64 bg-white shadow-lg rounded-lg p-4">
       <div className="flex items-center gap-3 mb-4">
@@ -100,24 +97,25 @@ const Header: React.FC = () => {
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 bg-white shadow-md text-stone-600 font-semibold">
-      <div className="flex justify-between items-center px-4 sm:px-6 lg:px-8 py-3 max-w-7xl mx-auto">
-        {/* Logo or Left Side */}
-        <div className="flex items-center">
-          <span className="text-xl font-bold"></span>
+    <header className="fixed top-0 left-0 right-0 z-30 bg-[#EEFFF6] text-stone-600 font-semibold">
+      <div className="flex justify-between items-center px-4 sm:px-6 lg:px-8 py-3 max-w-7xl mx-auto pl-[260px] md:pl-[100px]">
+        {/* Left Side: Search Bar */}
+        <div className="sm:ml-16 lg:flex pl-35 items-center w-[350px]">
+          <Input
+            placeholder="Search..."
+            prefix={<SearchOutlined className="text-stone-600" />}
+            className="rounded-md !border-none"
+          />
         </div>
 
         {/* Right Side: Profile, Name, Notifications */}
         <div className="flex items-center gap-3 sm:gap-5 lg:gap-7">
-          {/* Profile Icon and User Name */}
           <Dropdown overlay={profileMenu} trigger={['click']} placement="bottomRight">
             <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
               <UserOutlined className="text-base sm:text-lg" />
               <span className="hidden sm:inline text-sm">{userName}</span>
             </div>
           </Dropdown>
-
-          {/* Notification Bell with Badge */}
           <Dropdown overlay={notificationMenu} trigger={['click']} placement="bottomRight">
             <div className="cursor-pointer hover:bg-gray-100 p-1 rounded">
               <Badge

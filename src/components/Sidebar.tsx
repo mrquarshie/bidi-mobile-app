@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Button, Tooltip } from 'antd';
-import { MenuOutlined, LogoutOutlined } from '@ant-design/icons';
+import { LogoutOutlined } from '@ant-design/icons';
 import './Sidebar.css';
 
 const { Sider } = Layout;

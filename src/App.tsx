@@ -7,7 +7,7 @@ import Login from './pages/Login';
 // import Onboarding from './pages/Onboarding';
 import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
-// import Header from './components/Header';
+import Header from './components/Header';
 import { AuthProvider } from './AuthContext';
 
 const MainLayout: React.FC = () => {
@@ -16,11 +16,11 @@ const MainLayout: React.FC = () => {
       {/* Sidebar (visible on all screens) */}
       <Sidebar />
       {/* Main content area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col !bg-[#EEFFF6]">
         {/* Header */}
-        {/* <Header /> */}
+        <Header />
         {/* Page content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 mt-[60px] ml-[2px] collapsed:ml-[80px]">
+        <main className="flex-1 p-4 sm:p-6 lg:p-7 mt-[30px] ml-[2px] collapsed:ml-[80px]">
           <Outlet /> {/* Renders Home, Onboarding, etc. */}
         </main>
       </div>
