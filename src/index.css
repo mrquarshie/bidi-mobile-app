@@ -11,3 +11,7 @@
   scrollbar-width: none; /* Firefox */
 }
 
+.custom-dragger .ant-upload.ant-upload-drag {
+  background-color: #FAFAFA !important;
+}
+

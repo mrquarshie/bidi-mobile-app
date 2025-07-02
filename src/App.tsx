@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import { AuthProvider } from './AuthContext';
+import OMCRegistration from './pages/OMCRegistration';
 
 const MainLayout: React.FC = () => {
   return (
@@ -37,12 +38,14 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           {/* <Route path="/onboarding" element={<Onboarding />} /> */}
+           <Route path="/register-omc" element={<OMCRegistration />} />
         </Route>
         {/* Routes without Header and Sidebar */}
         {/* <Route path="/login" element={<PersonnelLogin />} /> */}
         <Route path="/login" element={<Login />} />
         {/* <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/forgot-password" element={<ForgotPassword />} /> */}
+
       </Routes>
     </Router>
     </AuthProvider>

@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Layout, Menu, Button, Tooltip } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
 import './Sidebar.css';
+import { useNavigate } from 'react-router-dom';
 
 const { Sider } = Layout;
-
 const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
-
+ const navigate = useNavigate();
   // Navigation menu items data with custom SVG icons
   const menuItems = [
     {
@@ -21,6 +21,7 @@ const Sidebar: React.FC = () => {
       ),
       label: 'Dashboard',
       isActive: true,
+       path: '/',
     },
     {
       key: '2',
@@ -33,6 +34,7 @@ const Sidebar: React.FC = () => {
       ),
       label: 'Register OMC',
       isActive: false,
+      path: '/register-omc',
     },
     {
       key: '3',
@@ -45,6 +47,7 @@ const Sidebar: React.FC = () => {
       ),
       label: 'Registered OMC',
       isActive: false,
+      path: '/',
     },
   ];
 
@@ -52,6 +55,14 @@ const Sidebar: React.FC = () => {
   // const toggleCollapse = () => {
   //   setCollapsed(!collapsed);
   // };
+
+   // Handle menu item click
+  const handleMenuClick = ({ key }: { key: string }) => {
+    const item = menuItems.find((menuItem) => menuItem.key === key);
+    if (item?.path) {
+      navigate(item.path);
+    }
+  };
 
   return (
     <Sider
@@ -90,6 +101,7 @@ const Sidebar: React.FC = () => {
       <Menu
         mode="inline"
         defaultSelectedKeys={['1']}
+        onClick={handleMenuClick}
         items={menuItems.map((item) => ({
           key: item.key,
             icon: (
