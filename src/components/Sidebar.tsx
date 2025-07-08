@@ -47,7 +47,7 @@ const Sidebar: React.FC = () => {
       ),
       label: 'Registered OMC',
       isActive: false,
-      path: '/',
+      path: '/registered-omc',
     },
   ];
 

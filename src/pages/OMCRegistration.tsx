@@ -61,7 +61,7 @@ const OMCRegistration: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8 pl-[260px] md:pl-[100px]">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 pl-[20px] md:pl-[100px]">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#000000] mb-6">
           OMC Registration

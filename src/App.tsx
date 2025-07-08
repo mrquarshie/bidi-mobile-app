@@ -10,6 +10,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import { AuthProvider } from './AuthContext';
 import OMCRegistration from './pages/OMCRegistration';
+import RegisteredOMC from './pages/RegisteredOMC';
 
 const MainLayout: React.FC = () => {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="/" element={<Home />} />
           {/* <Route path="/onboarding" element={<Onboarding />} /> */}
            <Route path="/register-omc" element={<OMCRegistration />} />
+          <Route path="/registered-omc" element={<RegisteredOMC />} />
         </Route>
         {/* Routes without Header and Sidebar */}
         {/* <Route path="/login" element={<PersonnelLogin />} /> */}
