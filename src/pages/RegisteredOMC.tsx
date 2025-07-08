@@ -1,7 +1,13 @@
-import React from 'react';
-import { Button } from 'antd';
+import React, { useState } from 'react';
+import { Button, Modal, Form, Input, Select, InputNumber } from 'antd';
+
+const { Option } = Select;
 
 const RegisteredOMC: React.FC = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [products, setProducts] = useState<string[]>([]);
+  const [form] = Form.useForm();
+
   // Placeholder OMC data (replace with actual data)
   const omcData = [
     {
@@ -48,6 +54,40 @@ const RegisteredOMC: React.FC = () => {
     },
   ];
 
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    form
+      .validateFields()
+      .then((values) => {
+        console.log('Form Values:', values);
+        setIsModalOpen(false);
+        setProducts([]);
+        form.resetFields();
+      })
+      .catch((error) => {
+        console.log('Validation Failed:', error);
+      });
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setProducts([]);
+    form.resetFields();
+  };
+
+  const handleAddProduct = (product: string) => {
+    if (!products.includes(product)) {
+      setProducts([...products, product]);
+    }
+  };
+
+  const handleRemoveProduct = (product: string) => {
+    setProducts(products.filter((p) => p !== product));
+  };
+
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8 pl-[20px] md:pl-[100px]">
       <div className="max-w-4xl mx-auto">
@@ -90,8 +130,8 @@ const RegisteredOMC: React.FC = () => {
                   </p>
                 </div>
                 <Button
-                  className="!bg-[#1F806E] !text-white font-semibold rounded-md hover:!bg-[#427c72] hover:!text-white"
-                  onClick={() => console.log(`Add Station for ${omc.name}`)}
+                  className="!bg-[#1F806E] !text-white font-semibold rounded-md !border-none hover:!bg-[#427c72] hover:!text-white"
+                  onClick={showModal}
                 >
                   Add Station
                 </Button>
@@ -109,7 +149,7 @@ const RegisteredOMC: React.FC = () => {
               <div className="hidden lg:flex flex-1 justify-end pr-4">
                 <Button
                   className="!bg-[#1F806E] !text-white font-semibold rounded-md hover:!bg-[#427c72] hover:!text-white"
-                  onClick={() => console.log(`Add Station for ${omc.name}`)}
+                   onClick={showModal}
                 >
                   Add Station
                 </Button>
@@ -118,6 +158,147 @@ const RegisteredOMC: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Modal with Form */}
+      <Modal
+        title={<span className="text-xl font-bold">Add Station</span>}
+        open={isModalOpen}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        centered
+        footer={[
+          <Button className='font-semibold rounded-md !bg-[#98C5BD] hover:!bg-[#abc0be] !border-none' key="cancel" onClick={handleCancel}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={handleOk}
+            className="!bg-[#1F806E] hover:!bg-[#427c72] !border-none"
+          >
+            Submit
+          </Button>,
+        ]}
+        bodyStyle={{ padding: '5px' }}
+      >
+        <Form form={form} layout="vertical" className="space-y-4">
+          {/* Station Name */}
+          <Form.Item
+            label="Station Name"
+            name="stationName"
+            rules={[{ required: true, message: 'Please enter station name' }]}
+            className="!mt-3"
+          >
+            <Input />
+          </Form.Item>
+
+          {/* Station Location Section */}
+          <div>
+            <h4 className="text-md font-bold text-[#3C3939] mb-2">
+              Station Location
+            </h4>
+            <div className="flex space-x-4">
+              <Form.Item
+                label="Region"
+                name="region"
+                rules={[{ required: true, message: 'Please select a region' }]}
+                className="flex-1 !mr-2"
+              >
+                <Select>
+                  <Option value="Greater Accra">Greater Accra</Option>
+                  <Option value="Ashanti">Ashanti</Option>
+                  <Option value="Western">Western</Option>
+                  {/* Add more regions as needed */}
+                </Select>
+              </Form.Item>
+              <Form.Item
+                label="District"
+                name="district"
+                rules={[{ required: true, message: 'Please enter district' }]}
+                className="flex-1 !mr-2"
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                label="Town"
+                name="town"
+                rules={[{ required: true, message: 'Please enter town' }]}
+                className="flex-1"
+              >
+                <Input />
+              </Form.Item>
+            </div>
+          </div>
+
+          {/* Pump Number */}
+          <Form.Item
+            label="Pump Number"
+            name="pumpNumber"
+            rules={[{ required: true, message: 'Please enter pump number' }]}
+          >
+            <InputNumber min={0} step={0.1} className="w-full" />
+          </Form.Item>
+
+          {/* Add Product Section */}
+          <div className="flex items-center space-x-4 mb-7">
+            <Button className='!bg-[#1F806E] hover:!bg-[#427c72] !border-none'
+              onClick={() => {
+                const availableProducts = ['Petrol', 'Diesel', 'Gas'];
+                const nextProduct = availableProducts.find(
+                  (p) => !products.includes(p)
+                );
+                if (nextProduct) handleAddProduct(nextProduct);
+              }}
+              disabled={products.length >= 3}
+            >
+              Add Product
+            </Button>
+            <div className="flex space-x-2">
+              {products.map((product) => (
+                <div
+                  key={product}
+                  className="flex items-center bg-gray-100 px-2 py-1 rounded-md"
+                >
+                  <span>{product}</span>
+                  <button
+                    className="ml-2 text-red-500"
+                    onClick={() => handleRemoveProduct(product)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Station Master Section */}
+          <div>
+            <h4 className="text-md font-bold text-[#3C3939] mb-2">
+              Station Master
+            </h4>
+            <div className="flex space-x-4">
+              <Form.Item
+                label="Name"
+                name="stationMasterName"
+                rules={[{ required: true, message: 'Please enter name' }]}
+                className="flex-1 !mr-2"
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                label="Contact Number"
+                name="contactNumber"
+                rules={[
+                  { required: true, message: 'Please enter contact number' },
+                ]}
+                className="flex-1"
+              >
+                <Input />
+              </Form.Item>
+            </div>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 };
