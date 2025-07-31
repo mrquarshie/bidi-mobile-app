@@ -167,7 +167,7 @@ const RegisteredOMC: React.FC = () => {
         onCancel={handleCancel}
         centered
         footer={[
-          <Button className='font-semibold rounded-md !bg-[#98C5BD] hover:!bg-[#abc0be] !border-none' key="cancel" onClick={handleCancel}>
+          <Button className='font-semibold rounded-md !bg-[#5b6d6a] hover:!bg-[#3a4242] !border-none' key="cancel" onClick={handleCancel}>
             Cancel
           </Button>,
           <Button

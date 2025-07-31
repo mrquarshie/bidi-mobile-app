@@ -1,12 +1,17 @@
-import React from 'react';
-import { Form, Input, Select, Button, Upload, message, type UploadFile, type UploadProps } from 'antd';
+import React, { useState } from 'react';
+import { Form, Input, Select, Button, Upload, message, type UploadFile, type UploadProps, InputNumber } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
 const { Dragger } = Upload;
 
 const OMCRegistration: React.FC = () => {
   const [form] = Form.useForm();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const navigate = useNavigate();
 
   // Custom validation for file upload (size < 1MB, JPG/JPEG/PNG)
   const beforeUpload = (file: UploadFile) => {
@@ -26,16 +31,15 @@ const OMCRegistration: React.FC = () => {
   // Upload props for Dragger
   const uploadProps: UploadProps = {
     name: 'file',
-    multiple: false, // Set to false since you want only one file
+    multiple: false,
     beforeUpload: beforeUpload,
     accept: 'image/jpeg,image/png',
     maxCount: 1,
     listType: 'picture',
+    fileList,
     onChange(info) {
+      setFileList(info.fileList);
       const { status } = info.file;
-      if (status !== 'uploading') {
-        console.log(info.file, info.fileList);
-      }
       if (status === 'done') {
         message.success(`${info.file.name} file uploaded successfully.`);
       } else if (status === 'error') {
@@ -47,16 +51,73 @@ const OMCRegistration: React.FC = () => {
     },
   };
 
+  // Handle product selection change
+  const handleProductChange = (value: string[]) => {
+    setSelectedProducts(value);
+    // Update form field to include price fields for selected products
+    const products = value.map((name) => ({
+      name,
+      price: form.getFieldValue(`productPrice_${name}`) || 0,
+    }));
+    form.setFieldsValue({ products });
+  };
+
   // Handle form submission
-  const onFinish = (values: any) => {
-    console.log('Form values:', values);
-    message.success('OMC Registration submitted successfully!');
-    form.resetFields();
+  const onFinish = async (values: any) => {
+    try {
+      // Prepare form data for file upload
+      const formData = new FormData();
+      formData.append('name', values.omcName);
+      formData.append('location', values.omcLocation);
+      if (values.email) {
+        formData.append('email', values.email);
+      }
+      formData.append('contactPerson', values.contactPerson);
+      formData.append('contact', values.contactNumber);
+      if (fileList.length > 0 && fileList[0].originFileObj) {
+        formData.append('logo', fileList[0].originFileObj);
+      }
+
+      // Prepare products array
+      const products = selectedProducts.map((name) => ({
+        name,
+        price: parseFloat(form.getFieldValue(`productPrice_${name}`)) || 0,
+      }));
+      formData.append('products', JSON.stringify(products));
+
+      // Get JWT token from localStorage
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        message.error('Please log in to register an OMC.');
+        navigate('/login');
+        return;
+      }
+
+      // Send POST request to register endpoint
+      const response = await axios.post('http://localhost:3000/auth/register', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      message.success('OMC Registration submitted successfully!');
+      form.resetFields();
+      setFileList([]);
+      setSelectedProducts([]);
+      navigate('/dashboard'); // Adjust the redirect path as needed
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || 'Failed to register OMC. Please try again.';
+      message.error(errorMessage);
+    }
   };
 
   // Handle cancel button
   const onCancel = () => {
     form.resetFields();
+    setFileList([]);
+    setSelectedProducts([]);
     message.info('Form cancelled');
   };
 
@@ -73,7 +134,7 @@ const OMCRegistration: React.FC = () => {
           className="p-6 rounded-lg"
         >
           <div className="flex flex-col md:flex-row gap-6 mb-6">
-            {/* Left Side: OMC Name and Location */}
+            {/* Left Side: OMC Name, Location, Email */}
             <div className="flex-1">
               <Form.Item
                 name="omcName"
@@ -86,6 +147,13 @@ const OMCRegistration: React.FC = () => {
                 name="omcLocation"
                 label="OMC Location"
                 rules={[{ required: true, message: 'Please enter OMC Location' }]}
+              >
+                <Input className="rounded-md" />
+              </Form.Item>
+              <Form.Item
+                name="email"
+                label="Email (Optional)"
+                rules={[{ type: 'email', message: 'Please enter a valid email' }]}
               >
                 <Input className="rounded-md" />
               </Form.Item>
@@ -102,7 +170,7 @@ const OMCRegistration: React.FC = () => {
                   }
                   return e && e.fileList;
                 }}
-                rules={[{ required: true, message: 'Please upload an OMC logo' }]}
+                rules={[{ required: false, message: 'Please upload an OMC logo' }]} // Made optional
               >
                 <Dragger {...uploadProps} className="w-[90%] custom-dragger">
                   <p className="ant-upload-drag-icon">
@@ -122,7 +190,7 @@ const OMCRegistration: React.FC = () => {
           {/* Horizontal Border Line */}
           <div className="border-b border-[#625E5C]/20 mb-6"></div>
 
-          {/* Lower Section: Contact Person, Contact Number, Product */}
+          {/* Lower Section: Contact Person, Contact Number, Products */}
           <Form.Item
             name="contactPerson"
             label="Contact Person"
@@ -145,7 +213,7 @@ const OMCRegistration: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="products"
-            label="Product"
+            label="Products"
             rules={[{ required: true, message: 'Please select at least one product' }]}
           >
             <Select
@@ -153,13 +221,11 @@ const OMCRegistration: React.FC = () => {
               allowClear
               className="rounded-md"
               placeholder="Select fuel products"
+              onChange={handleProductChange}
               tagRender={({ label, onClose }) => (
                 <span className="inline-flex items-center px-2 py-1 m-1 bg-green-100 text-green-800 rounded">
                   {label}
-                  <span
-                    className="ml-2 cursor-pointer"
-                    onClick={onClose}
-                  >
+                  <span className="ml-2 cursor-pointer" onClick={onClose}>
                     &times;
                   </span>
                 </span>
@@ -171,6 +237,32 @@ const OMCRegistration: React.FC = () => {
               <Option value="V-Power">V-Power</Option>
             </Select>
           </Form.Item>
+
+          {/* Dynamic Price Inputs for Selected Products */}
+          {selectedProducts.map((product) => (
+            <Form.Item
+              key={product}
+              name={`productPrice_${product}`}
+              label={`Price for ${product} ($)`}
+              rules={[
+                { required: true, message: `Please enter price for ${product}` },
+                { type: 'number', min: 0, message: 'Price must be a positive number' },
+              ]}
+            >
+              <InputNumber
+                className="rounded-md w-full"
+                min={0}
+                step={0.01}
+                onChange={(value) => {
+                  const products = selectedProducts.map((name) => ({
+                    name,
+                    price: name === product ? value : form.getFieldValue(`productPrice_${name}`) || 0,
+                  }));
+                  form.setFieldsValue({ products });
+                }}
+              />
+            </Form.Item>
+          ))}
 
           {/* Buttons */}
           <div className="flex justify-end gap-4">
