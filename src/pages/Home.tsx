@@ -1,8 +1,84 @@
 import { PlusOutlined, DownOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
-import React from 'react';
+import { Button, message  } from 'antd';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+interface Omc {
+  id: string;
+  name: string;
+  location: string | null;
+  logo: string | null;
+  contactPerson: string | null;
+  contact: string | null;
+  email: string | null;
+  products: { name: string; price: number }[] | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+interface CountResponse {
+  stations: number;
+  omcs: number;
+}
+
+const BACKEND_BASE_URL = 'http://localhost:3000';
 
 const Home: React.FC = () => {
+   const [omcData, setOmcData] = useState<Omc[]>([]);
+  const [totalOmcs, setTotalOmcs] = useState<number>(0);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [stationCounts, setStationCounts] = useState<{ [key: string]: number }>({});
+
+  // Fetch OMC data and counts
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch OMC list
+        const omcResponse = await axios.get<Omc[]>(`${BACKEND_BASE_URL}/user/omcs`);
+        const omcs = omcResponse.data;
+        setOmcData(omcs);
+
+        // Fetch total OMC count
+        const countResponse = await axios.get<CountResponse>(`${BACKEND_BASE_URL}/user/count`);
+        setTotalOmcs(countResponse.data.omcs);
+
+        // Derive last updated timestamp
+        if (omcs.length > 0) {
+          const latestUpdate = omcs.reduce((latest, omc) => {
+            const updateTime = new Date(omc.updatedAt).getTime();
+            return updateTime > new Date(latest).getTime() ? omc.updatedAt : latest;
+          }, omcs[0].updatedAt);
+          const formattedDate = new Date(latestUpdate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          });
+          setLastUpdated(formattedDate);
+        } else {
+          setLastUpdated('No data available');
+        }
+
+        // Fetch station counts for each OMC
+        const stationCountPromises = omcs.map((omc) =>
+          axios.get<CountResponse>(`${BACKEND_BASE_URL}/user/count?omcId=${omc.id}`)
+            .then((response) => ({ id: omc.id, count: response.data.stations }))
+        );
+        const stationCountResults = await Promise.all(stationCountPromises);
+        const stationCountMap = stationCountResults.reduce((acc, { id, count }) => {
+          acc[id] = count;
+          return acc;
+        }, {} as { [key: string]: number });
+        setStationCounts(stationCountMap);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        message.error('Failed to load data. Please try again.');
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="bg-[#EEFFF6] min-h-screen flex flex-col md:flex-row p-2 sm:p-3 lg:p-4">
       {/* Main Content Area */}
@@ -27,6 +103,7 @@ const Home: React.FC = () => {
                 type="primary"
                 className="!bg-[#ffffff] hover:!bg-[#e5e7e6f1] !text-[#00380A] font-semibold py-2 px-4 rounded-md"
                 icon={<PlusOutlined />}
+                onClick={() => window.location.href = '/register-omc'}
               >
                 Register OMC
               </Button>
@@ -43,10 +120,10 @@ const Home: React.FC = () => {
                 Total OMC's
               </h3>
               <p className="text-base sm:text-xs text-[#868FA0] mb-4">
-                Last updated: Today
+                Last updated: {lastUpdated}
               </p>
               <p className="text-6xl sm:text-8xl font-bold text-[#000000]">
-                47
+                {totalOmcs}
               </p>
             </div>
             {/* Image */}
@@ -94,39 +171,37 @@ const Home: React.FC = () => {
       All Fuel Stations
     </h3>
     <div className="space-y-4">
-      {[
-        { name: 'Goil', stations: 4301, logo: '/goil-logo.svg' },
-        { name: 'Total Energies', stations: 5621, logo: '/total-logo.svg' },
-        { name: 'Shell', stations: 3701, logo: '/shell-logo.svg' },
-        { name: 'Allied', stations: 2099, logo: '/allied-logo.svg' },
-        { name: 'Star Oil', stations: 3820, logo: '/staroil-logo.svg' },
-        { name: 'Zen Oil', stations: 1462, logo: '/zenoil-logo.svg' },
-      ].map((station, index) => (
-        <div
-          key={index}
-          className="flex justify-between items-center p-4 rounded-lg shadow-slate-400 shadow-md bg-white"
-        >
-          <div className="flex-1">
-            <h4 className="text-lg font-bold text-[#000000] mb-1">
-              {station.name}
-            </h4>
-            <p className="text-sm text-[#868FA0] mb-2">
-              All Stations
-            </p>
-            <p className="text-2xl font-bold text-[#000000]">
-              {station.stations}
-            </p>
+            {omcData.map((omc) => (
+              <div
+                key={omc.id}
+                className="flex justify-between items-center p-4 rounded-lg shadow-slate-400 shadow-md bg-white"
+              >
+                <div className="flex-1">
+                  <h4 className="text-lg font-bold text-[#000000] mb-1">
+                    {omc.name}
+                  </h4>
+                  <p className="text-sm text-[#868FA0] mb-2">
+                    All Stations
+                  </p>
+                  <p className="text-2xl font-bold text-[#000000]">
+                    {stationCounts[omc.id] ?? 0}
+                  </p>
+                </div>
+                <img
+                  src={
+                    omc.logo
+                      ? `${BACKEND_BASE_URL}/uploads/${omc.logo.split('\\').pop()}`
+                      : '/bidi-logo.svg'
+                  }
+                  alt={`${omc.name} Logo`}
+                  className="w-12 h-12 object-contain"
+                  
+                />
+              </div>
+            ))}
           </div>
-          <img
-            src={station.logo}
-            alt={`${station.name} Logo`}
-            className="w-12 h-12 object-contain"
-          />
         </div>
-      ))}
-    </div>
-  </div>
-</aside>
+      </aside>
     </div>
   );
 };

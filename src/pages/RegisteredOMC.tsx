@@ -1,80 +1,104 @@
-import React, { useState } from 'react';
-import { Button, Modal, Form, Input, Select, InputNumber } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, Modal, Form, Input, Select, InputNumber, message } from 'antd';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+
+interface Omc {
+  id: string;
+  name: string;
+  location: string;
+  logo: string | null;
+  contact: string;
+  contactPerson: string | null;
+  email: string | null;
+  products: { name: string; price: number }[] | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
 
 const { Option } = Select;
 
+const BACKEND_BASE_URL = 'http://localhost:3000';
+
 const RegisteredOMC: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState<string[]>([]);
+  const [selectedOmcId, setSelectedOmcId] = useState<string | null>(null);
   const [form] = Form.useForm();
+  const [omcData, setOmcData] = useState<Omc[]>([]);
 
   // Placeholder OMC data (replace with actual data)
-  const omcData = [
-    {
-      logo: '/goil-logo.svg',
-      name: 'Goil',
-      location: 'Accra, Ghana',
-      phone: '030-123-4567',
-      regNumber: 'OMC-123456',
-    },
-    {
-      logo: '/total-logo.svg',
-      name: 'Total Energies',
-      location: 'Tema, Ghana',
-      phone: '030-234-5678',
-      regNumber: 'OMC-789012',
-    },
-    {
-      logo: '/shell-logo.svg',
-      name: 'Shell',
-      location: 'Kumasi, Ghana',
-      phone: '030-345-6789',
-      regNumber: 'OMC-345678',
-    },
-    {
-      logo: '/allied-logo.svg',
-      name: 'Allied',
-      location: 'Takoradi, Ghana',
-      phone: '030-456-7890',
-      regNumber: 'OMC-901234',
-    },
-    {
-      logo: '/staroil-logo.svg',
-      name: 'Star Oil',
-      location: 'Cape Coast, Ghana',
-      phone: '030-567-8901',
-      regNumber: 'OMC-567890',
-    },
-    {
-      logo: '/zenoil-logo.svg',
-      name: 'Zen Oil',
-      location: 'Tamale, Ghana',
-      phone: '030-678-9012',
-      regNumber: 'OMC-678901',
-    },
-  ];
+    useEffect(() => {
+    const fetchOmcData = async () => {
+      try {
+        const response = await axios.get<Omc[]>('http://localhost:3000/user/omcs', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`, // Adjust based on your auth setup
+          },
+        });
+        setOmcData(response.data);
+      } catch (error) {
+        console.error('Error fetching OMC data:', error);
+      }
+    };
 
-  const showModal = () => {
+    fetchOmcData();
+  }, []);
+
+  const showModal = (omcId: string) => {
+    setSelectedOmcId(omcId);
     setIsModalOpen(true);
   };
 
   const handleOk = () => {
     form
       .validateFields()
-      .then((values) => {
+      .then(async (values) => {
+        try {
+          const payload = {
+            name: values.stationName,
+            omcId: parseInt(selectedOmcId!),
+            pumpNo: values.pumpNumber?.toString(),
+            region: values.region,
+            district: values.district,
+            town: values.town,
+            managerName: values.stationMasterName,
+            managerContact: values.contactNumber,
+            products: products.length > 0 ? products : undefined,
+          };
+          await axios.post(`${BACKEND_BASE_URL}/auth/stations`, payload, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
         console.log('Form Values:', values);
         setIsModalOpen(false);
         setProducts([]);
-        form.resetFields();
+        setSelectedOmcId(null);
+          form.resetFields();
+          message.success('Station added successfully!');
+          toast.success('Station added successfully!');
+      } catch (error: any) {
+        console.error('Error creating station:', error);
+          toast.error(
+            error.response?.data?.message || 'Failed to add station. Please try again.'
+          );
+        }
       })
       .catch((error) => {
         console.log('Validation Failed:', error);
+        toast.error('Please fill in all required fields correctly.', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       });
   };
 
   const handleCancel = () => {
     setIsModalOpen(false);
     setProducts([]);
+    setSelectedOmcId(null);
     form.resetFields();
   };
 
@@ -88,6 +112,12 @@ const RegisteredOMC: React.FC = () => {
     setProducts(products.filter((p) => p !== product));
   };
 
+   const getAvailableProducts = () => {
+    if (!selectedOmcId) return [];
+    const selectedOmc = omcData.find((omc) => omc.id === selectedOmcId);
+    return selectedOmc?.products?.map((p) => p.name) || [];
+  };
+
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8 pl-[20px] md:pl-[100px]">
       <div className="max-w-4xl mx-auto">
@@ -95,17 +125,22 @@ const RegisteredOMC: React.FC = () => {
           Registered OMC
         </h2>
         <div className="space-y-4">
-          {omcData.map((omc, index) => (
+          {omcData.map((omc) => (
             <div
-              key={index}
+              key={omc.id} 
               className="flex flex-col lg:flex-row items-center p-6 rounded-lg shadow-md bg-white"
             >
               {/* First Section: Logo, Name, Location, Phone */}
               <div className="flex-1 flex items-center mb-4 lg:mb-0">
-                <img
-                  src={omc.logo}
+               <img
+                  src={
+                    omc.logo
+                      ? `${BACKEND_BASE_URL}/uploads/${omc.logo.split('\\').pop()}` // Extract filename and use forward slashes
+                      : '/bidi-logo.svg'
+                  }
                   alt={`${omc.name} Logo`}
                   className="w-24 h-24 object-contain mr-6 bg-[#E2F3E9] rounded-md p-3 shadow-sm"
+                
                 />
                 <div>
                   <h3 className="text-xl font-bold text-[#3C3939] mb-1">
@@ -115,7 +150,7 @@ const RegisteredOMC: React.FC = () => {
                     {omc.location}
                   </p>
                   <p className="text-sm text-[#625E5C]">
-                    {omc.phone}
+                    {omc.contact}
                   </p>
                 </div>
               </div>
@@ -123,15 +158,15 @@ const RegisteredOMC: React.FC = () => {
               <div className="flex-1 flex flex-col items-center lg:hidden space-y-4">
                 <div>
                   <h4 className="text-lg font-bold text-[#3C3939] mb-1">
-                    Registration Number
+                    Registration No.
                   </h4>
                   <p className="text-base text-[#625E5C]">
-                    {omc.regNumber}
+                    {`OMC-${omc.id}`}
                   </p>
                 </div>
                 <Button
                   className="!bg-[#1F806E] !text-white font-semibold rounded-md !border-none hover:!bg-[#427c72] hover:!text-white"
-                  onClick={showModal}
+                  onClick={() => showModal(omc.id)}
                 >
                   Add Station
                 </Button>
@@ -142,14 +177,14 @@ const RegisteredOMC: React.FC = () => {
                   Registration Number
                 </h4>
                 <p className="text-base text-[#625E5C]">
-                  {omc.regNumber}
+                   {`OMC-${omc.id}`}
                 </p>
               </div>
               {/* Third Section: Add Station Button (Laptop) */}
               <div className="hidden lg:flex flex-1 justify-end pr-4">
                 <Button
                   className="!bg-[#1F806E] !text-white font-semibold rounded-md hover:!bg-[#427c72] hover:!text-white"
-                   onClick={showModal}
+                  onClick={() => showModal(omc.id)}
                 >
                   Add Station
                 </Button>
@@ -206,9 +241,21 @@ const RegisteredOMC: React.FC = () => {
               >
                 <Select>
                   <Option value="Greater Accra">Greater Accra</Option>
+                  <Option value="Ahafo">Ahafo</Option>
                   <Option value="Ashanti">Ashanti</Option>
+                  <Option value="Bono">Bono</Option>
+                  <Option value="Bono East">Bono East</Option>
+                  <Option value="Central">Central</Option>
+                  <Option value="Eastern">Eastern</Option>
+                  <Option value="North East">North East</Option>
+                  <Option value="Northern">Northern</Option>
+                  <Option value="Oti">Oti</Option>
+                  <Option value="Savannah">Savannah</Option>
+                  <Option value="Upper East">Upper East</Option>
+                  <Option value="Upper West">Upper West</Option>
+                  <Option value="Volta">Volta</Option>
                   <Option value="Western">Western</Option>
-                  {/* Add more regions as needed */}
+                  <Option value="Western North">Western North</Option>
                 </Select>
               </Form.Item>
               <Form.Item
@@ -240,16 +287,17 @@ const RegisteredOMC: React.FC = () => {
           </Form.Item>
 
           {/* Add Product Section */}
-          <div className="flex items-center space-x-4 mb-7">
-            <Button className='!bg-[#1F806E] hover:!bg-[#427c72] !border-none'
+           <div className="flex items-center space-x-4 mb-7">
+            <Button
+              className="!bg-[#1F806E] hover:!bg-[#427c72] !border-none"
               onClick={() => {
-                const availableProducts = ['Petrol', 'Diesel', 'Gas'];
+                const availableProducts = getAvailableProducts();
                 const nextProduct = availableProducts.find(
                   (p) => !products.includes(p)
                 );
                 if (nextProduct) handleAddProduct(nextProduct);
               }}
-              disabled={products.length >= 3}
+              disabled={products.length >= getAvailableProducts().length || !selectedOmcId}
             >
               Add Product
             </Button>
@@ -261,7 +309,7 @@ const RegisteredOMC: React.FC = () => {
                 >
                   <span>{product}</span>
                   <button
-                    className="ml-2 text-red-500"
+                    className="ml-2 cursor-pointer text-red-500"
                     onClick={() => handleRemoveProduct(product)}
                   >
                     ×

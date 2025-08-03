@@ -6,8 +6,8 @@ import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 const { Text } = Typography;
 
 const Header: React.FC = () => {
-  const userName = 'John Doe';
-  const userEmail = 'john.doe@example.com';
+  const userName = 'Doris Scott';
+  const userEmail = 'doris.scott@example.com';
   const userRole = 'Admin';
 
   // Notification Dropdown Content (Unchanged)
