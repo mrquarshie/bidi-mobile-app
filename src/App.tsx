@@ -7,10 +7,20 @@ import Header from './components/Header';
 import { AuthProvider } from './AuthContext';
 import OMCRegistration from './pages/OMCRegistration';
 import RegisteredOMC from './pages/RegisteredOMC';
+import { ToastContainer } from 'react-toastify';
 
 const MainLayout: React.FC = () => {
   return (
    <div className="flex min-h-screen">
+    <ToastContainer  position="top-right"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover/>
       <Sidebar />
       {/* Main content area */}
       <div className="flex-1 flex flex-col !bg-[#EEFFF6]">

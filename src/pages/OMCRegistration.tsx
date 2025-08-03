@@ -3,26 +3,52 @@ import { Form, Input, Select, Button, Upload, message, type UploadFile, type Upl
 import { InboxOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const { Option } = Select;
 const { Dragger } = Upload;
 
 const OMCRegistration: React.FC = () => {
-  const [form] = Form.useForm();
+ const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [productPrices, setProductPrices] = useState<{ [key: string]: number }>({}); // New state for prices
   const navigate = useNavigate();
+
+  // Handle product selection change
+  const handleProductChange = (value: string[]) => {
+    setSelectedProducts(value);
+    // Preserve existing prices when updating products
+    const updatedPrices = { ...productPrices };
+    // Remove prices for deselected products (optional, depending on requirements)
+    Object.keys(updatedPrices).forEach((key) => {
+      if (!value.includes(key)) {
+        delete updatedPrices[key];
+      }
+    });
+    setProductPrices(updatedPrices);
+  };
+
+  // Handle price change for a product
+  const handlePriceChange = (product: string, value: number | null) => {
+    setProductPrices((prev) => ({
+      ...prev,
+      [product]: value || 0,
+    }));
+  };
 
   // Custom validation for file upload (size < 1MB, JPG/JPEG/PNG)
   const beforeUpload = (file: UploadFile) => {
     const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
     if (!isJpgOrPng) {
       message.error('You can only upload JPG, JPEG, or PNG files!');
+      toast.error('You can only upload JPG, JPEG, or PNG files!');
       return false;
     }
     const isLt1MB = file.size! / 1024 / 1024 < 1;
     if (!isLt1MB) {
       message.error('Image must be smaller than 1MB!');
+      toast.error('Image must be smaller than 1MB!');
       return false;
     }
     return true;
@@ -51,21 +77,9 @@ const OMCRegistration: React.FC = () => {
     },
   };
 
-  // Handle product selection change
-  const handleProductChange = (value: string[]) => {
-    setSelectedProducts(value);
-    // Update form field to include price fields for selected products
-    const products = value.map((name) => ({
-      name,
-      price: form.getFieldValue(`productPrice_${name}`) || 0,
-    }));
-    form.setFieldsValue({ products });
-  };
-
   // Handle form submission
   const onFinish = async (values: any) => {
     try {
-      // Prepare form data for file upload
       const formData = new FormData();
       formData.append('name', values.omcName);
       formData.append('location', values.omcLocation);
@@ -78,38 +92,40 @@ const OMCRegistration: React.FC = () => {
         formData.append('logo', fileList[0].originFileObj);
       }
 
-      // Prepare products array
+      // Prepare products array using productPrices state
       const products = selectedProducts.map((name) => ({
         name,
-        price: parseFloat(form.getFieldValue(`productPrice_${name}`)) || 0,
+        price: productPrices[name] || 0,
       }));
       formData.append('products', JSON.stringify(products));
 
-      // Get JWT token from localStorage
       const token = localStorage.getItem('accessToken');
       if (!token) {
         message.error('Please log in to register an OMC.');
+        toast.error('Please log in to register an OMC.');
         navigate('/login');
         return;
       }
 
-      // Send POST request to register endpoint
-      const response = await axios.post('http://localhost:3000/auth/register', formData, {
+      await axios.post('http://localhost:3000/auth/register', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      message.success('OMC Registration submitted successfully!');
+      message.success('Registration submitted successfully!');
+      toast.success('Registration submitted successfully!');
       form.resetFields();
       setFileList([]);
       setSelectedProducts([]);
-      navigate('/dashboard'); // Adjust the redirect path as needed
+      setProductPrices({}); 
+      navigate('/registered-omc');
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Failed to register OMC. Please try again.';
       message.error(errorMessage);
+       toast.error(errorMessage);
     }
   };
 
@@ -239,30 +255,29 @@ const OMCRegistration: React.FC = () => {
           </Form.Item>
 
           {/* Dynamic Price Inputs for Selected Products */}
-          {selectedProducts.map((product) => (
-            <Form.Item
-              key={product}
-              name={`productPrice_${product}`}
-              label={`Price for ${product} ($)`}
-              rules={[
-                { required: true, message: `Please enter price for ${product}` },
-                { type: 'number', min: 0, message: 'Price must be a positive number' },
-              ]}
-            >
-              <InputNumber
-                className="rounded-md w-full"
-                min={0}
-                step={0.01}
-                onChange={(value) => {
-                  const products = selectedProducts.map((name) => ({
-                    name,
-                    price: name === product ? value : form.getFieldValue(`productPrice_${name}`) || 0,
-                  }));
-                  form.setFieldsValue({ products });
-                }}
-              />
-            </Form.Item>
-          ))}
+          {selectedProducts.length > 0 && (
+            <div className="flex flex-wrap gap-4">
+              {selectedProducts.map((product) => (
+                <Form.Item
+                  key={product}
+                  name={`productPrice_${product}`}
+                  label={`Price for ${product} (GHS)`} // Label for each product price
+                  rules={[
+                    { required: true, message: `Please enter price for ${product}` },
+                    { type: 'number', min: 0, message: 'Price must be a positive number' },
+                  ]}
+                  initialValue={productPrices[product] || 0} // Initialize with stored price
+                >
+                  <InputNumber
+                    className="rounded-md w-32"
+                    min={0}
+                    step={0.01}
+                    onChange={(value) => handlePriceChange(product, value)}
+                  />
+                </Form.Item>
+              ))}
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="flex justify-end gap-4">
