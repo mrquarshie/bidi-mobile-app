@@ -22,7 +22,8 @@ interface CountResponse {
   omcs: number;
 }
 
-const BACKEND_BASE_URL = 'http://localhost:3000';
+// const BACKEND_BASE_URL = 'http://localhost:3000';
+const BACKEND_BASE_URL = 'https://bidi-backend-2lpo.onrender.com';
 
 const Home: React.FC = () => {
    const [omcData, setOmcData] = useState<Omc[]>([]);

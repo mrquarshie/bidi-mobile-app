@@ -34,9 +34,15 @@ const Login: React.FC = () => {
 
     setIsLoading(true);
 
-    try {
+    // try {
+    //   const response = await axios.post(
+    //     "http://localhost:3000/auth/login",
+    //     { email, password }
+    //   );
+
+       try {
       const response = await axios.post(
-        "http://localhost:3000/auth/login",
+        "https://bidi-backend-2lpo.onrender.com/auth/login",
         { email, password }
       );
 

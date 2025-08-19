@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Input, Select, InputNumber, message } from 'antd';
+import { Button, Modal, Form, Input, Select, message } from 'antd';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
@@ -17,13 +17,18 @@ interface Omc {
   deletedAt: string | null;
 }
 
+interface Pump {
+  productName: string;
+  pumpNumber: string;
+}
+
 const { Option } = Select;
 
-const BACKEND_BASE_URL = 'http://localhost:3000';
+const BACKEND_BASE_URL = 'https://bidi-backend-2lpo.onrender.com';
 
 const RegisteredOMC: React.FC = () => {
    const [isModalOpen, setIsModalOpen] = useState(false);
-  const [products, setProducts] = useState<string[]>([]);
+   const [pumps, setPumps] = useState<Pump[]>([]);
   const [selectedOmcId, setSelectedOmcId] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [omcData, setOmcData] = useState<Omc[]>([]);
@@ -32,9 +37,9 @@ const RegisteredOMC: React.FC = () => {
     useEffect(() => {
     const fetchOmcData = async () => {
       try {
-        const response = await axios.get<Omc[]>('http://localhost:3000/user/omcs', {
+        const response = await axios.get<Omc[]>('https://bidi-backend-2lpo.onrender.com/user/omcs', {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`, // Adjust based on your auth setup
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
         setOmcData(response.data);
@@ -59,13 +64,12 @@ const RegisteredOMC: React.FC = () => {
           const payload = {
             name: values.stationName,
             omcId: parseInt(selectedOmcId!),
-            pumpNo: values.pumpNumber?.toString(),
             region: values.region,
             district: values.district,
             town: values.town,
             managerName: values.stationMasterName,
             managerContact: values.contactNumber,
-            products: products.length > 0 ? products : undefined,
+            pumps,
           };
           await axios.post(`${BACKEND_BASE_URL}/auth/stations`, payload, {
             headers: {
@@ -74,7 +78,7 @@ const RegisteredOMC: React.FC = () => {
           });
         console.log('Form Values:', values);
         setIsModalOpen(false);
-        setProducts([]);
+        setPumps([]);
         setSelectedOmcId(null);
           form.resetFields();
           message.success('Station added successfully!');
@@ -97,25 +101,70 @@ const RegisteredOMC: React.FC = () => {
 
   const handleCancel = () => {
     setIsModalOpen(false);
-    setProducts([]);
+    setPumps([]);
     setSelectedOmcId(null);
     form.resetFields();
   };
 
-  const handleAddProduct = (product: string) => {
-    if (!products.includes(product)) {
-      setProducts([...products, product]);
-    }
+  const handleAddPump = (productName: string, pumpNumber: string) => {
+  if (!pumps.some((p) => p.pumpNumber === pumpNumber)) {
+    setPumps([...pumps, { productName, pumpNumber }]);
+  } else {
+    toast.error('Pump number must be unique.');
+  }
   };
 
-  const handleRemoveProduct = (product: string) => {
-    setProducts(products.filter((p) => p !== product));
+  const handleRemovePump = (pumpNumber: string) => {
+    setPumps(pumps.filter((p) => p.pumpNumber !== pumpNumber));
   };
 
    const getAvailableProducts = () => {
     if (!selectedOmcId) return [];
     const selectedOmc = omcData.find((omc) => omc.id === selectedOmcId);
     return selectedOmc?.products?.map((p) => p.name) || [];
+  };
+
+    const PumpForm = () => {
+    const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+    const [pumpNumber, setPumpNumber] = useState<string>('');
+
+    const handleAdd = () => {
+      if (selectedProduct && pumpNumber) {
+        handleAddPump(selectedProduct, pumpNumber);
+        setSelectedProduct(null);
+        setPumpNumber('');
+      }
+    };
+
+     return (
+      <div className="flex space-x-4 mb-4">
+        <Select
+          placeholder="Select Product"
+          value={selectedProduct}
+          onChange={setSelectedProduct}
+          className="w-1/2"
+        >
+          {getAvailableProducts().map((product) => (
+            <Option key={product} value={product}>
+              {product}
+            </Option>
+          ))}
+        </Select>
+        <Input
+          placeholder="Pump Number"
+          value={pumpNumber}
+          onChange={(e) => setPumpNumber(e.target.value)}
+          className="w-1/3 !mx-1.5"
+        />
+        <Button
+          onClick={handleAdd}
+          disabled={!selectedProduct || !pumpNumber}
+          className="!bg-[#1F806E] hover:!bg-[#427c72] !border-none !text-white"
+        >
+          Add Pump
+        </Button>
+      </div>
+    );
   };
 
   return (
@@ -277,40 +326,19 @@ const RegisteredOMC: React.FC = () => {
             </div>
           </div>
 
-          {/* Pump Number */}
-          <Form.Item
-            label="Pump Number"
-            name="pumpNumber"
-            rules={[{ required: true, message: 'Please enter pump number' }]}
-          >
-            <InputNumber min={0} step={0.1} className="w-full" />
-          </Form.Item>
-
-          {/* Add Product Section */}
-           <div className="flex items-center space-x-4 mb-7">
-            <Button
-              className="!bg-[#1F806E] hover:!bg-[#427c72] !border-none"
-              onClick={() => {
-                const availableProducts = getAvailableProducts();
-                const nextProduct = availableProducts.find(
-                  (p) => !products.includes(p)
-                );
-                if (nextProduct) handleAddProduct(nextProduct);
-              }}
-              disabled={products.length >= getAvailableProducts().length || !selectedOmcId}
-            >
-              Add Product
-            </Button>
-            <div className="flex space-x-2">
-              {products.map((product) => (
+          <div>
+            <h4 className="text-md font-bold text-[#3C3939] mb-2">Pumps</h4>
+            <PumpForm />
+            <div className="flex flex-wrap space-x-2 mb-4">
+              {pumps.map((pump) => (
                 <div
-                  key={product}
-                  className="flex items-center bg-gray-100 px-2 py-1 rounded-md"
+                  key={pump.pumpNumber}
+                  className="flex items-center bg-gray-100 px-2 py-1 rounded-md mb-2"
                 >
-                  <span>{product}</span>
+                  <span>{`${pump.productName} (Pump: ${pump.pumpNumber})`}</span>
                   <button
                     className="ml-2 cursor-pointer text-red-500"
-                    onClick={() => handleRemoveProduct(product)}
+                    onClick={() => handleRemovePump(pump.pumpNumber)}
                   >
                     ×
                   </button>
@@ -318,6 +346,7 @@ const RegisteredOMC: React.FC = () => {
               ))}
             </div>
           </div>
+
 
           {/* Station Master Section */}
           <div>
