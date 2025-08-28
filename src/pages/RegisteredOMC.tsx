@@ -184,7 +184,7 @@ const RegisteredOMC: React.FC = () => {
                <img
                   src={
                     omc.logo
-                      ? `${BACKEND_BASE_URL}/uploads/${omc.logo.split('\\').pop()}` // Extract filename and use forward slashes
+      ? `${BACKEND_BASE_URL}/${omc.logo.replace(/\\/g, '/')}`
                       : '/bidi-logo.svg'
                   }
                   alt={`${omc.name} Logo`}

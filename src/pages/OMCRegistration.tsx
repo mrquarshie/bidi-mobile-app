@@ -255,6 +255,8 @@ const OMCRegistration: React.FC = () => {
             >
               <Option value="Petrol">Petrol</Option>
               <Option value="Diesel">Diesel</Option>
+              <Option value="XP3 Diesel">XP3 Diesel</Option>
+              <Option value="XP3 Petrol">XP3 Petrol</Option>
               <Option value="Gas">Gas</Option>
               <Option value="V-Power">V-Power</Option>
             </Select>
@@ -279,6 +281,7 @@ const OMCRegistration: React.FC = () => {
                     min={0}
                     step={0.01}
                     onChange={(value) => handlePriceChange(product, value)}
+                    suffix={<span style={{ fontSize: '12px', color: '#625E5C'}}>/ltr</span>}
                   />
                 </Form.Item>
               ))}
