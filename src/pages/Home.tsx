@@ -191,12 +191,11 @@ const Home: React.FC = () => {
                 <img
                   src={
                     omc.logo
-                      ? `${BACKEND_BASE_URL}/uploads/${omc.logo.split('\\').pop()}`
+                      ? `${BACKEND_BASE_URL}/${omc.logo.replace(/\\/g, '/')}`
                       : '/bidi-logo.svg'
                   }
                   alt={`${omc.name} Logo`}
                   className="w-12 h-12 object-contain"
-                  
                 />
               </div>
             ))}
