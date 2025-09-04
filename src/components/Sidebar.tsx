@@ -55,6 +55,19 @@ const Sidebar: React.FC = () => {
       isActive: false,
       path: '/registered-omc',
     },
+    {
+      key: '4',
+      icon: (
+        <img
+          src="/registered-icon.svg"
+          alt="Stations Icon"
+          className="sidebar-icon"
+        />
+      ),
+      label: 'Stations',
+      isActive: false,
+      path: '/stations',
+    },
   ];
 
   // Toggle sidebar collapse
