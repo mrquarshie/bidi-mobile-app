@@ -9,6 +9,8 @@ import axios from "axios";
 import { useAuth } from "../AuthContext";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 
+const apiBase = import.meta.env.VITE_BASE_URL;
+
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,15 +36,9 @@ const Login: React.FC = () => {
 
     setIsLoading(true);
 
-    // try {
-    //   const response = await axios.post(
-    //     "http://localhost:3000/auth/login",
-    //     { email, password }
-    //   );
-
-       try {
+    try {
       const response = await axios.post(
-        "https://bidi-backend-2lpo.onrender.com/auth/login",
+        `${apiBase}/auth/login`,
         { email, password }
       );
 

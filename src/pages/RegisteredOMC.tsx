@@ -24,7 +24,7 @@ interface Pump {
 
 const { Option } = Select;
 
-const BACKEND_BASE_URL = 'https://bidi-backend-2lpo.onrender.com';
+const apiBase = import.meta.env.VITE_BASE_URL;
 
 const RegisteredOMC: React.FC = () => {
    const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,8 +36,9 @@ const RegisteredOMC: React.FC = () => {
   // Placeholder OMC data (replace with actual data)
     useEffect(() => {
     const fetchOmcData = async () => {
-      try {
-        const response = await axios.get<Omc[]>('https://bidi-backend-2lpo.onrender.com/user/omcs', {
+
+        try {
+        const response = await axios.get<Omc[]>(`${apiBase}/user/omcs`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -71,7 +72,7 @@ const RegisteredOMC: React.FC = () => {
             managerContact: values.contactNumber,
             pumps,
           };
-          await axios.post(`${BACKEND_BASE_URL}/auth/stations`, payload, {
+          await axios.post(`${apiBase}/auth/stations`, payload, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
@@ -183,9 +184,9 @@ const RegisteredOMC: React.FC = () => {
               <div className="flex-1 flex items-center mb-4 lg:mb-0">
                <img
                   src={
-                    omc.logo
-      ? `${BACKEND_BASE_URL}/${omc.logo.replace(/\\/g, '/')}`
-                      : '/bidi-logo.svg'
+                     omc.logo
+      ? `${apiBase}/${omc.logo.replace(/\\/g, '/')}`
+      : '/bidi-logo.svg'
                   }
                   alt={`${omc.name} Logo`}
                   className="w-24 h-24 object-contain mr-6 bg-[#E2F3E9] rounded-md p-3 shadow-sm"

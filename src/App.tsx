@@ -1,13 +1,37 @@
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import { AuthProvider } from './AuthContext';
+import { AuthProvider, useAuth } from './AuthContext';
 import OMCRegistration from './pages/OMCRegistration';
 import RegisteredOMC from './pages/RegisteredOMC';
 import { ToastContainer } from 'react-toastify';
+import { Spin } from 'antd';
+
+const centeredSpinStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100vh',
+};
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { role, isLoading } = useAuth();
+ if (isLoading) {
+    return (
+      <div style={centeredSpinStyle}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+  if (!role) {
+    console.log('No role, redirecting to /login');
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
 
 const MainLayout: React.FC = () => {
   return (
@@ -42,9 +66,24 @@ function App() {
       <Routes>
         {/* Routes with Header and Sidebar */}
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
-           <Route path="/register-omc" element={<OMCRegistration />} />
-          <Route path="/registered-omc" element={<RegisteredOMC />} />
+         <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+           <Route path="/register-omc"   element={
+                <ProtectedRoute>
+                  <OMCRegistration />
+                </ProtectedRoute>
+              } />
+          <Route path="/registered-omc" element={
+              <ProtectedRoute>
+                <RegisteredOMC />
+              </ProtectedRoute>
+            } />
         </Route>
         <Route path="/login" element={<Login />} />
       </Routes>

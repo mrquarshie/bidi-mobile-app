@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Button, Tooltip } from 'antd';
+import { Layout, Menu, Button, Tooltip, Modal } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
 import './Sidebar.css';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 
 const { Sider } = Layout;
+// const apiBase = import.meta.env.VITE_BASE_URL;
+
 const Sidebar: React.FC = () => {
+   const { logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+
  const navigate = useNavigate();
   // Navigation menu items data with custom SVG icons
   const menuItems = [
@@ -62,6 +68,23 @@ const Sidebar: React.FC = () => {
     if (item?.path) {
       navigate(item.path);
     }
+  };
+
+    // Handle logout confirmation
+  const handleLogout = () => {
+    console.log('handleLogout triggered');
+    setIsLogoutModalVisible(true); // Show the modal
+  };
+
+  const handleModalOk = () => {
+    console.log('Modal confirmed, calling logout');
+    logout();
+    setIsLogoutModalVisible(false); // Close the modal
+  };
+
+  const handleModalCancel = () => {
+    console.log('Modal cancelled');
+    setIsLogoutModalVisible(false); // Close the modal
   };
 
   return (
@@ -131,6 +154,7 @@ const Sidebar: React.FC = () => {
       {/* Logout Button */}
       <Button
         type="default"
+        onClick={handleLogout}
         className="flex items-center gap-2 md:gap-3 logout-button px-4 py-2 rounded-[5px] border-[#a9a7a7] text-white bg-transparent hover:bg-[#064021f1] hover:text-white hover:border-[#a9a7a7]"
       >
         <LogoutOutlined className="sidebar-icon" />
@@ -138,6 +162,24 @@ const Sidebar: React.FC = () => {
           <span className="font-medium text-sm truncate">Logout</span>
         )}
       </Button>
+      <Modal
+        title="Confirm Logout"
+        open={isLogoutModalVisible}
+        onOk={handleModalOk}
+        onCancel={handleModalCancel}
+        okText="Logout"
+        cancelText="Cancel"
+        okButtonProps={{ danger: true,
+    style: { 
+        backgroundColor: '#dc2626',
+        border: 'none'
+    } 
+}}
+        cancelButtonProps={{ className: 'text-white !border-0 !bg-gray-600' }}
+        zIndex={10000}
+      >
+        <p>Are you sure you want to log out?</p>
+      </Modal>
     </Sider>
   );
 };

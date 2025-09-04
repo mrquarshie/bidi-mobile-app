@@ -22,9 +22,7 @@ interface CountResponse {
   omcs: number;
 }
 
-// const BACKEND_BASE_URL = 'http://localhost:3000';
-const BACKEND_BASE_URL = 'https://bidi-backend-2lpo.onrender.com';
-
+const apiBase = import.meta.env.VITE_BASE_URL;
 const Home: React.FC = () => {
    const [omcData, setOmcData] = useState<Omc[]>([]);
   const [totalOmcs, setTotalOmcs] = useState<number>(0);
@@ -34,14 +32,20 @@ const Home: React.FC = () => {
   // Fetch OMC data and counts
   useEffect(() => {
     const fetchData = async () => {
-      try {
+       try {
+      const token = localStorage.getItem('accessToken');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
         // Fetch OMC list
-        const omcResponse = await axios.get<Omc[]>(`${BACKEND_BASE_URL}/user/omcs`);
+        const omcResponse = await axios.get<Omc[]>(`${apiBase}/user/omcs`, config);
         const omcs = omcResponse.data;
         setOmcData(omcs);
 
         // Fetch total OMC count
-        const countResponse = await axios.get<CountResponse>(`${BACKEND_BASE_URL}/user/count`);
+        const countResponse = await axios.get<CountResponse>(`${apiBase}/user/count`, config);
         setTotalOmcs(countResponse.data.omcs);
 
         // Derive last updated timestamp
@@ -62,7 +66,7 @@ const Home: React.FC = () => {
 
         // Fetch station counts for each OMC
         const stationCountPromises = omcs.map((omc) =>
-          axios.get<CountResponse>(`${BACKEND_BASE_URL}/user/count?omcId=${omc.id}`)
+          axios.get<CountResponse>(`${apiBase}/user/count?omcId=${omc.id}`, config)
             .then((response) => ({ id: omc.id, count: response.data.stations }))
         );
         const stationCountResults = await Promise.all(stationCountPromises);
@@ -191,7 +195,7 @@ const Home: React.FC = () => {
                 <img
                   src={
                     omc.logo
-                      ? `${BACKEND_BASE_URL}/${omc.logo.replace(/\\/g, '/')}`
+                      ? `${apiBase}/${omc.logo.replace(/\\/g, '/')}`
                       : '/bidi-logo.svg'
                   }
                   alt={`${omc.name} Logo`}

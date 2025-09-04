@@ -8,6 +8,8 @@ import { toast } from 'react-toastify';
 const { Option } = Select;
 const { Dragger } = Upload;
 
+const apiBase = import.meta.env.VITE_BASE_URL;
+
 const OMCRegistration: React.FC = () => {
  const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -107,13 +109,7 @@ const OMCRegistration: React.FC = () => {
         return;
       }
 
-      // await axios.post('http://localhost:3000/auth/register', formData, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     'Content-Type': 'multipart/form-data',
-      //   },
-      // });
-       await axios.post('https://bidi-backend-2lpo.onrender.com/auth/register', formData, {
+      await axios.post(`${apiBase}/auth/register`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
