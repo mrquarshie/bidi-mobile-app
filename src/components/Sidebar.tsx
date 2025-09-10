@@ -59,7 +59,7 @@ const Sidebar: React.FC = () => {
       key: '4',
       icon: (
         <img
-          src="/registered-icon.svg"
+          src="/stations.svg"
           alt="Stations Icon"
           className="sidebar-icon"
         />
@@ -67,6 +67,19 @@ const Sidebar: React.FC = () => {
       label: 'Stations',
       isActive: false,
       path: '/stations',
+    },
+    {
+      key: '5',
+      icon: (
+        <img
+          src="/attendants.svg"
+          alt="Attendants Icon"
+          className="sidebar-icon"
+        />
+      ),
+      label: 'Attendants',
+      isActive: false,
+      path: '/attendants',
     },
   ];
 
@@ -140,19 +153,11 @@ const Sidebar: React.FC = () => {
         onClick={handleMenuClick}
         items={menuItems.map((item) => ({
           key: item.key,
-            icon: (
-          <div className="flex justify-center items-center">
-            {item.key === '1' ? (
-              item.icon
-            ) : (
-              <img
-                src={item.key === '2' ? '/register-icon.svg' : '/registered-icon.svg'}
-                alt={item.key === '2' ? 'Register OMC Icon' : 'Registered OMC Icon'}
-                className="sidebar-icon larger-icon"
-              />
-            )}
-          </div>
-        ),
+          icon: (
+            <div className="flex justify-center items-center">
+              {item.icon}
+            </div>
+          ),
           label: (
             <Tooltip title={item.label} placement="right">
               <span className="font-medium text-white text-sm truncate">

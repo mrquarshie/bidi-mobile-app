@@ -10,6 +10,7 @@ import RegisteredOMC from './pages/RegisteredOMC';
 import { ToastContainer } from 'react-toastify';
 import { Spin } from 'antd';
 import Stations from './pages/Stations';
+import Attendants from './pages/attendants';
 
 const centeredSpinStyle: React.CSSProperties = {
   display: 'flex',
@@ -88,6 +89,11 @@ function App() {
               <Route path="/stations" element={
               <ProtectedRoute>
                 <Stations />
+              </ProtectedRoute>
+            } />
+              <Route path ="/attendants" element={
+              <ProtectedRoute>
+                <Attendants />
               </ProtectedRoute>
             } />
         </Route>
