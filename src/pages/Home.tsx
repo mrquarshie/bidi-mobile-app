@@ -2,12 +2,6 @@ import { PlusOutlined, DownOutlined } from '@ant-design/icons';
 import { Button, message } from 'antd';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import CountUp from 'react-countup';
-
-type AnimatedCounterProps = {
-  end: number;
-  duration?: number;
-};
 
 interface Omc {
   id: string;
@@ -43,33 +37,6 @@ const Home: React.FC = () => {
   const [totalStations, setTotalStations] = useState<number>(0);
   const [totalAttendants, setTotalAttendants] = useState<number>(0);
   const [totalSales, setTotalSales] = useState<number>(0); // Dummy data for sales
-
-  // Animated Counter Component
-const AnimatedCounter = ({ end, duration = 2.5 }: AnimatedCounterProps) => {
-  const [start, setStart] = useState(0);
-  const [animate, setAnimate] = useState(false);
-
-  useEffect(() => {
-    setAnimate(true);
-  }, []);
-
-  if (!animate) {
-    return <span className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#000000]">{0}</span>;
-  }
-
-  return (
-    <CountUp
-      start={start}
-      end={end}
-      duration={duration}
-      onEnd={() => setStart(end)}
-    >
-      {({ countUpRef, }) => (
-        <span ref={countUpRef} className="text-4xl p-3 sm:text-5xl lg:text-6xl font-bold text-[#3b3b3b]" />
-      )}
-    </CountUp>
-  );
-};
 
   // Fetch OMC data and counts
   useEffect(() => {
@@ -155,30 +122,34 @@ const AnimatedCounter = ({ end, duration = 2.5 }: AnimatedCounterProps) => {
         <section className="mb-6 sm:mb-8">
           {totalStations > 0 || totalAttendants > 0 || totalSales > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Total omc Card */}
-              <div className="flex flex-col items-center p-5 rounded-lg shadow-md !bg-[#bff8c8]">
-                <p className="text-base font-semibold text-[#5c5c5c] text-center mb-2">
+              {/* Total Stations Card */}
+              <div className="flex flex-col items-center p-5 rounded-lg shadow-md !bg-[#A5F9B1]">
+                <p className="text-base font-semibold text-[#1C1C1C] text-center mb-2">
                   Total OMC's
                 </p>
-                 <AnimatedCounter end={totalOmcs} />
+                <p className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#000000] mb-4">
+                  {totalOmcs}
+                </p>
                 <div className="flex space-x-2">
                   <div className="relative">
-                    <div className="w-12 h-12 !bg-[#bff5c7] border-1 border-[#d0dbd7] rounded-full flex items-center justify-center p-2">
+                    <div className="w-10 h-10 !bg-[#a5f3b1] border-1 border-[#5baf90] rounded-full flex items-center justify-center p-2">
                       <img src="/drum.svg" alt="Drum" className="w-6 h-6" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Total station Card */}
-              <div className="flex flex-col items-center p-5 rounded-lg shadow-md !bg-[#bff8c8]">
-                <p className="text-base font-semibold text-[#5c5c5c] text-center mb-2">
+              {/* Total Attendants Card */}
+              <div className="flex flex-col items-center p-5 rounded-lg shadow-md !bg-[#A5F9B1]">
+                <p className="text-base font-semibold text-[#1C1C1C] text-center mb-2">
                   Total Stations
                 </p>
-               <AnimatedCounter end={totalStations} />
+                <p className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#000000] mb-4">
+                  {totalStations}
+                </p>
                 <div className="flex space-x-2">
                   <div className="relative">
-                    <div className="w-12 h-12 !bg-[#bff5c7] border-1 border-[#d0dbd7] rounded-full flex items-center justify-center p-2">
+                    <div className="w-9 h-10 !bg-[#a5f3b1] border-1 border-[#5baf90] rounded-full flex items-center justify-center p-2">
                       <img src="/gas-station.svg" alt="Gas Station" className="w-6 h-6" />
                     </div>
                   </div>
@@ -186,14 +157,16 @@ const AnimatedCounter = ({ end, duration = 2.5 }: AnimatedCounterProps) => {
               </div>
 
               {/* Total Sales Card */}
-              <div className="flex flex-col items-center p-5 rounded-lg shadow-md !bg-[#bff8c8]">
-                <p className="text-base font-semibold text-[#5c5c5c] text-center mb-2">
+              <div className="flex flex-col items-center p-5 rounded-lg shadow-md !bg-[#A5F9B1]">
+                <p className="text-base font-semibold text-[#1C1C1C] text-center mb-2">
                   Total Attendants
                 </p>
-                <AnimatedCounter end={totalAttendants} />
+                <p className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#000000] mb-4">
+                  {totalAttendants}
+                </p>
                 <div className="flex space-x-2">
                   <div className="relative">
-                    <div className="w-12 h-12 !bg-[#bff5c7] border-1 border-[#d0dbd7] rounded-full flex items-center justify-center p-2">
+                    <div className="w-10 h-10 !bg-[#a5f3b1] border-1 border-[#5baf90] rounded-full flex items-center justify-center p-2">
                       <img src="/fuel-pump-icon.svg" alt="Fuel Pump" className="w-6 h-6" />
                     </div>
                   </div>
