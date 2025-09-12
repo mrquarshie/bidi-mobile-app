@@ -71,6 +71,8 @@ const Attendants: React.FC = () => {
   const [editForm] = Form.useForm();
 
   const apiBase = import.meta.env.VITE_BASE_URL;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseBucket = import.meta.env.VITE_SUPABASE_BUCKET;
 
   useEffect(() => {
     const fetchPumpAttendants = async () => {
@@ -477,7 +479,7 @@ const handleCreateAttendant = async (values: {
           type="link"
           icon={<EyeOutlined className="!text-[#064021]" />}
           onClick={() => {
-            setPreviewImage(`${apiBase}/${cardUrl.replace(/\\/g, '/')}`);
+            setPreviewImage(`${supabaseUrl}/storage/v1/object/public/${supabaseBucket}/${cardUrl}`);
             setPreviewVisible(true);
           }}
         />
@@ -551,7 +553,7 @@ const handleCreateAttendant = async (values: {
     <div className="flex flex-col min-h-screen px-2 py-4">
       <div className="w-full max-w-full mx-auto">
         <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">
-          Pump Attendants
+          Fuel Attendants
         </h2>
         <div className="flex flex-col sm:flex-row justify-between items-end mb-3 gap-2">
           <Space>
@@ -561,7 +563,7 @@ const handleCreateAttendant = async (values: {
               onClick={() => setCreateModalVisible(true)}
               className="!bg-[#064021] hover:!bg-[#0e522e] !border-0"
             >
-              Add Pump Attendant
+              Add Fuel Attendant
             </Button>
           </Space>
           <Input

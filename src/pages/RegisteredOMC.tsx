@@ -131,7 +131,7 @@ const RegisteredOMC: React.FC = () => {
                 <img
                   src={
                     omc.logo
-                      ? `${apiBase}/${omc.logo.replace(/\\/g, '/')}`
+                      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${import.meta.env.VITE_SUPABASE_BUCKET}/${omc.logo}`
                       : '/bidi-logo.svg'
                   }
                   alt={`${omc.name} Logo`}

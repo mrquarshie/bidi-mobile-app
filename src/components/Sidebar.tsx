@@ -77,9 +77,35 @@ const Sidebar: React.FC = () => {
           className="sidebar-icon"
         />
       ),
-      label: 'Attendants',
+      label: 'Fuel Attendants',
       isActive: false,
       path: '/attendants',
+    },
+        {
+      key: '7',
+      icon: (
+        <img
+          src="/membership.svg"
+          alt="Membership Icon"
+          className="sidebar-icon"
+        />
+      ),
+      label: 'Membership',
+      isActive: false,
+      path: '/',
+    },
+        {
+      key: '8',
+      icon: (
+        <img
+          src="/register.svg"
+          alt="Register Icon"
+          className="sidebar-icon"
+        />
+      ),
+      label: 'Register Card',
+      isActive: false,
+      path: '/',
     },
   ];
 

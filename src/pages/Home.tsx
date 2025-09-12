@@ -1,7 +1,13 @@
 import { PlusOutlined, DownOutlined } from '@ant-design/icons';
-import { Button, message  } from 'antd';
+import { Button, message } from 'antd';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import CountUp from 'react-countup';
+
+type AnimatedCounterProps = {
+  end: number;
+  duration?: number;
+};
 
 interface Omc {
   id: string;
@@ -22,47 +28,76 @@ interface CountResponse {
   omcs: number;
 }
 
+interface AttendantCountResponse {
+  attendants: number;
+}
+
 const apiBase = import.meta.env.VITE_BASE_URL;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseBucket = import.meta.env.VITE_SUPABASE_BUCKET;
+
 const Home: React.FC = () => {
-   const [omcData, setOmcData] = useState<Omc[]>([]);
-  const [totalOmcs, setTotalOmcs] = useState<number>(0);
-  const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [omcData, setOmcData] = useState<Omc[]>([]);
+   const [totalOmcs, setTotalOmcs] = useState<number>(0);
   const [stationCounts, setStationCounts] = useState<{ [key: string]: number }>({});
+  const [totalStations, setTotalStations] = useState<number>(0);
+  const [totalAttendants, setTotalAttendants] = useState<number>(0);
+  const [totalSales, setTotalSales] = useState<number>(0); // Dummy data for sales
+
+  // Animated Counter Component
+const AnimatedCounter = ({ end, duration = 2.5 }: AnimatedCounterProps) => {
+  const [start, setStart] = useState(0);
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    setAnimate(true);
+  }, []);
+
+  if (!animate) {
+    return <span className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#000000]">{0}</span>;
+  }
+
+  return (
+    <CountUp
+      start={start}
+      end={end}
+      duration={duration}
+      onEnd={() => setStart(end)}
+    >
+      {({ countUpRef, }) => (
+        <span ref={countUpRef} className="text-4xl p-3 sm:text-5xl lg:text-6xl font-bold text-[#3b3b3b]" />
+      )}
+    </CountUp>
+  );
+};
 
   // Fetch OMC data and counts
   useEffect(() => {
     const fetchData = async () => {
-       try {
-      const token = localStorage.getItem('accessToken');
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+      try {
+        const token = localStorage.getItem('accessToken');
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
         // Fetch OMC list
         const omcResponse = await axios.get<Omc[]>(`${apiBase}/user/omcs`, config);
         const omcs = omcResponse.data;
         setOmcData(omcs);
 
-        // Fetch total OMC count
+        // Fetch total stations count
         const countResponse = await axios.get<CountResponse>(`${apiBase}/user/count`, config);
         setTotalOmcs(countResponse.data.omcs);
+        setTotalStations(countResponse.data.stations);
 
-        // Derive last updated timestamp
-        if (omcs.length > 0) {
-          const latestUpdate = omcs.reduce((latest, omc) => {
-            const updateTime = new Date(omc.updatedAt).getTime();
-            return updateTime > new Date(latest).getTime() ? omc.updatedAt : latest;
-          }, omcs[0].updatedAt);
-          const formattedDate = new Date(latestUpdate).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          });
-          setLastUpdated(formattedDate);
-        } else {
-          setLastUpdated('No data available');
-        }
+        // Fetch total attendants count
+        const attendantsResponse = await axios.get<AttendantCountResponse>(`${apiBase}/user/attendant-count`, config);
+        setTotalAttendants(attendantsResponse.data.attendants);
+
+        // Set dummy sales data
+        setTotalSales(125000); // Dummy data
 
         // Fetch station counts for each OMC
         const stationCountPromises = omcs.map((omc) =>
@@ -116,32 +151,59 @@ const Home: React.FC = () => {
           </div>
         </section>
 
-       {/* Section 2: Total OMC's */}
+        {/* Section 2: Three Cards */}
         <section className="mb-6 sm:mb-8">
-          <div className="relative flex flex-col shadow-slate-400 sm:flex-row items-center sm:items-start justify-between p-5 sm:p-6 rounded-lg shadow-md bg-white overflow-hidden">
-            {/* Text Content */}
-            <div className="flex-1 mb-4 sm:mb-0 sm:pr-6 z-10">
-              <h3 className="text-md sm:text-md lg:text-xl font-bold text-[#1C1C1C] mb-2">
-                Total OMC's
-              </h3>
-              <p className="text-base sm:text-xs text-[#868FA0] mb-4">
-                Last updated: {lastUpdated}
-              </p>
-              <p className="text-6xl sm:text-8xl font-bold text-[#000000]">
-                {totalOmcs}
-              </p>
-            </div>
-            {/* Image */}
-            <div className="flex-1 flex justify-center items-center sm:mt-2 ">
-              <img
-                src="/hero-image-2.svg"
-                alt="Total OMC's"
-                className="w-full max-w-[290px] sm:max-w-[300px] h-auto object-contain rounded-md"
-              />
-            </div>
-          </div>
-        </section>
+          {totalStations > 0 || totalAttendants > 0 || totalSales > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Total omc Card */}
+              <div className="flex flex-col items-center p-5 rounded-lg shadow-md !bg-[#bff8c8]">
+                <p className="text-base font-semibold text-[#5c5c5c] text-center mb-2">
+                  Total OMC's
+                </p>
+                 <AnimatedCounter end={totalOmcs} />
+                <div className="flex space-x-2">
+                  <div className="relative">
+                    <div className="w-12 h-12 !bg-[#bff5c7] border-1 border-[#d0dbd7] rounded-full flex items-center justify-center p-2">
+                      <img src="/drum.svg" alt="Drum" className="w-6 h-6" />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
+              {/* Total station Card */}
+              <div className="flex flex-col items-center p-5 rounded-lg shadow-md !bg-[#bff8c8]">
+                <p className="text-base font-semibold text-[#5c5c5c] text-center mb-2">
+                  Total Stations
+                </p>
+               <AnimatedCounter end={totalStations} />
+                <div className="flex space-x-2">
+                  <div className="relative">
+                    <div className="w-12 h-12 !bg-[#bff5c7] border-1 border-[#d0dbd7] rounded-full flex items-center justify-center p-2">
+                      <img src="/gas-station.svg" alt="Gas Station" className="w-6 h-6" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Sales Card */}
+              <div className="flex flex-col items-center p-5 rounded-lg shadow-md !bg-[#bff8c8]">
+                <p className="text-base font-semibold text-[#5c5c5c] text-center mb-2">
+                  Total Attendants
+                </p>
+                <AnimatedCounter end={totalAttendants} />
+                <div className="flex space-x-2">
+                  <div className="relative">
+                    <div className="w-12 h-12 !bg-[#bff5c7] border-1 border-[#d0dbd7] rounded-full flex items-center justify-center p-2">
+                      <img src="/fuel-pump-icon.svg" alt="Fuel Pump" className="w-6 h-6" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">Loading metrics...</div>
+          )}
+        </section>
         {/* Section 3: Daily Sales */}
         <section>
           <div className="relative flex flex-col items-center sm:items-start justify-between p-6 sm:p-8 rounded-lg shadow-lg bg-white overflow-hidden min-h-[400px]">
@@ -169,13 +231,13 @@ const Home: React.FC = () => {
         </section>
       </div>
 
-    {/* Right Section (Hidden on Mobile) */}
-<aside className="hidden md:block w-[300px] ml-6 bg-[#D2FFD8] rounded-lg shadow-lg h-screen sticky top-0 overflow-y-auto scrollbar-hide">
-  <div className="p-3">
-    <h3 className="text-md font-bold text-[#000000] mb-4">
-      All Fuel Stations
-    </h3>
-    <div className="space-y-4">
+      {/* Right Section (Hidden on Mobile) */}
+      <aside className="hidden md:block w-[300px] ml-6 bg-[#D2FFD8] rounded-lg shadow-lg h-screen sticky top-0 overflow-y-auto scrollbar-hide">
+        <div className="p-3">
+          <h3 className="text-md font-bold text-[#000000] mb-4">
+            All Fuel Stations
+          </h3>
+          <div className="space-y-4">
             {omcData.map((omc) => (
               <div
                 key={omc.id}
@@ -195,7 +257,7 @@ const Home: React.FC = () => {
                 <img
                   src={
                     omc.logo
-                      ? `${apiBase}/${omc.logo.replace(/\\/g, '/')}`
+                      ? `${supabaseUrl}/storage/v1/object/public/${supabaseBucket}/${omc.logo}`
                       : '/bidi-logo.svg'
                   }
                   alt={`${omc.name} Logo`}
