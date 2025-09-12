@@ -1,5 +1,5 @@
 import { PlusOutlined, DownOutlined } from '@ant-design/icons';
-import { Button, message } from 'antd';
+import { Button, message, Spin } from 'antd';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -38,6 +38,13 @@ const Home: React.FC = () => {
   const [totalAttendants, setTotalAttendants] = useState<number>(0);
   const [totalSales, setTotalSales] = useState<number>(0); // Dummy data for sales
 
+  const MetricsLoader = () => {
+  return (
+    <div className="flex justify-center items-center py-8">
+      <Spin size="large" />
+    </div>
+  );
+};
   // Fetch OMC data and counts
   useEffect(() => {
     const fetchData = async () => {
@@ -174,7 +181,7 @@ const Home: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center py-8">Loading metrics...</div>
+            <MetricsLoader />
           )}
         </section>
         {/* Section 3: Daily Sales */}
