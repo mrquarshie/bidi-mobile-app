@@ -51,6 +51,11 @@ interface AddStationFormValues extends StationFormValues {
 interface PumpFormValues {
   productName: string;
   pumpNumber: string;
+  dispenserNumber?: string;
+}
+
+interface DispenserFormValues {
+  dispenserNumber: string;
 }
 
 const { Option } = Select;
@@ -94,20 +99,31 @@ const PumpForm = memo(
     pumps,
     setPumps,
     availableProducts,
+    dispenserNumbers = [],
   }: {
     pumps: PumpFormValues[];
     setPumps: (pumps: PumpFormValues[]) => void;
     availableProducts: string[];
+    dispenserNumbers?: string[];
   }) => {
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
     const [pumpNumber, setPumpNumber] = useState<string>('');
+    const [selectedDispenser, setSelectedDispenser] = useState<string | null>(null);
 
     const handleAddPump = () => {
-      if (selectedProduct && pumpNumber) {
+      if (selectedProduct && pumpNumber && (dispenserNumbers.length === 0 || selectedDispenser)) {
         if (!pumps.some((p) => p.pumpNumber === pumpNumber)) {
-          setPumps([...pumps, { productName: selectedProduct, pumpNumber }]);
+          setPumps([
+            ...pumps,
+            {
+              productName: selectedProduct,
+              pumpNumber,
+              dispenserNumber: dispenserNumbers.length > 0 ? selectedDispenser || undefined : undefined,
+            },
+          ]);
           setSelectedProduct(null);
           setPumpNumber('');
+          setSelectedDispenser(null);
         } else {
           toast.error('Pump number must be unique.');
         }
@@ -119,33 +135,57 @@ const PumpForm = memo(
         {availableProducts.length === 0 ? (
           <p className="text-sm text-gray-500 mb-2">Please select an OMC to add pumps.</p>
         ) : (
-          <div className="flex space-x-4 mb-4">
-            <Select
-              placeholder="Select Product"
-              value={selectedProduct}
-              onChange={setSelectedProduct}
-              allowClear
-              className="w-1/2"
-            >
-              {availableProducts.map((product) => (
-                <Option key={product} value={product}>
-                  {product}
-                </Option>
-              ))}
-            </Select>
-            <Input
-              placeholder="Pump Number"
-              value={pumpNumber}
-              onChange={(e) => setPumpNumber(e.target.value)}
-              className="w-1/3 !mx-1.5"
-            />
-            <Button
-              onClick={handleAddPump}
-              disabled={!selectedProduct || !pumpNumber || availableProducts.length === 0}
-              className="!bg-[#1F806E] hover:!bg-[#427c72] !border-none !text-white"
-            >
-              Add Pump
-            </Button>
+          <div className="flex flex-col gap-3 mb-4">
+            <div className="flex space-x-4">
+              <Select
+                placeholder="Select Product"
+                value={selectedProduct}
+                onChange={setSelectedProduct}
+                allowClear
+                className="w-1/2"
+              >
+                {availableProducts.map((product) => (
+                  <Option key={product} value={product}>
+                    {product}
+                  </Option>
+                ))}
+              </Select>
+              <Input
+                placeholder="Pump Number"
+                value={pumpNumber}
+                onChange={(e) => setPumpNumber(e.target.value)}
+                className="w-1/3 !mx-1.5"
+              />
+            </div>
+            {dispenserNumbers.length > 0 && (
+              <Select
+                placeholder="Select Dispenser"
+                value={selectedDispenser}
+                onChange={setSelectedDispenser}
+                allowClear
+                className="w-1/2"
+              >
+                {dispenserNumbers.map((d) => (
+                  <Option key={d} value={d}>
+                    {d}
+                  </Option>
+                ))}
+              </Select>
+            )}
+            <div>
+              <Button
+                onClick={handleAddPump}
+                disabled={
+                  !selectedProduct ||
+                  !pumpNumber ||
+                  availableProducts.length === 0 ||
+                  (dispenserNumbers.length > 0 && !selectedDispenser)
+                }
+                className="!bg-[#1F806E] hover:!bg-[#427c72] !border-none !text-white"
+              >
+                Add Pump
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -169,6 +209,10 @@ const Stations: React.FC = () => {
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
   const selectedOmccId = Form.useWatch('omcId', addForm);
+  const [addDispensers, setAddDispensers] = useState<DispenserFormValues[]>([]);
+  const [newDispenserNumber, setNewDispenserNumber] = useState<string>('');
+  const [editDispensers, setEditDispensers] = useState<DispenserFormValues[]>([]);
+  const [editNewDispenserNumber, setEditNewDispenserNumber] = useState<string>('');
 
   useEffect(() => {
     const fetchOmcs = async () => {
@@ -212,11 +256,13 @@ const Stations: React.FC = () => {
   const handleEdit = (station: Station) => {
     setEditingStation(station);
     setEditPumps(
-      station.pumps.map((pump) => ({
+      (station.pumps || []).map((pump) => ({
         productName: pump.product.type,
         pumpNumber: pump.pumpNumber,
       }))
     );
+    setEditDispensers([]);
+    setEditNewDispenserNumber('');
     editForm.setFieldsValue({
       name: station.name,
       region: station.region,
@@ -237,12 +283,16 @@ const Stations: React.FC = () => {
     setEditingStation(null);
     editForm.resetFields();
     setEditPumps([]);
+    setEditDispensers([]);
+    setEditNewDispenserNumber('');
   };
 
   const handleAddCancel = () => {
     setIsAddModalVisible(false);
     addForm.resetFields();
     setAddPumps([]);
+    setAddDispensers([]);
+    setNewDispenserNumber('');
   };
 
   const handleEditSubmit = async (values: StationFormValues) => {
@@ -250,15 +300,64 @@ const Stations: React.FC = () => {
     setIsSubmittingEdit(true);
     try {
       const availableProducts = getAvailableProducts(editingStation.omcId);
-      const validationError = validatePumps(editPumps, availableProducts);
+      // If user added dispensers in edit flow, validate with dispenser rules
+      let validationError: string | null;
+      if (editDispensers.length > 0) {
+        const dispNumbers = editDispensers.map((d) => d.dispenserNumber.trim()).filter(Boolean);
+        if (dispNumbers.length !== new Set(dispNumbers).size) {
+          validationError = 'Dispenser numbers must be unique.';
+        } else {
+          const uniquePumpNumbers = new Set<string>();
+          validationError = null;
+          for (const p of editPumps) {
+            if (!p.productName || !p.pumpNumber) {
+              validationError = 'All pumps must have a product name and pump number.';
+              break;
+            }
+            if (!availableProducts.includes(p.productName)) {
+              validationError = `Product "${p.productName}" is not available for this OMC.`;
+              break;
+            }
+            if (uniquePumpNumbers.has(p.pumpNumber)) {
+              validationError = `Pump number "${p.pumpNumber}" is duplicated.`;
+              break;
+            }
+            uniquePumpNumbers.add(p.pumpNumber);
+            if (!p.dispenserNumber) {
+              validationError = 'Please select a dispenser for each pump.';
+              break;
+            }
+            if (!dispNumbers.includes(p.dispenserNumber)) {
+              validationError = `Selected dispenser "${p.dispenserNumber}" does not exist.`;
+              break;
+            }
+          }
+        }
+      } else {
+        validationError = validatePumps(editPumps, availableProducts);
+      }
       if (validationError) {
         toast.error(validationError);
         return;
       }
-      const payload = {
-        ...values,
-        pumps: editPumps,
-      };
+      let payload: any;
+      if (editDispensers.length > 0) {
+        const dispensersPayload = editDispensers.map((d) => ({
+          dispenserNumber: d.dispenserNumber,
+          pumps: editPumps
+            .filter((p) => p.dispenserNumber === d.dispenserNumber)
+            .map(({ productName, pumpNumber }) => ({ productName, pumpNumber })),
+        }));
+        payload = {
+          ...values,
+          dispensers: dispensersPayload,
+        };
+      } else {
+        payload = {
+          ...values,
+          pumps: editPumps,
+        };
+      }
       await axios.patch(`${apiBase}/user/station/${editingStation.id}`, payload, {
         headers: getAuthHeaders(),
       });
@@ -276,15 +375,45 @@ const Stations: React.FC = () => {
     }
   };
 
+  const validateAddInputs = (
+    dispensers: DispenserFormValues[],
+    pumps: PumpFormValues[],
+    availableProducts: string[]
+  ): string | null => {
+    const dispNumbers = dispensers.map((d) => d.dispenserNumber.trim()).filter(Boolean);
+    if (dispNumbers.length !== new Set(dispNumbers).size) {
+      return 'Dispenser numbers must be unique.';
+    }
+    const uniquePumpNumbers = new Set<string>();
+    for (const p of pumps) {
+      if (!p.productName || !p.pumpNumber) return 'All pumps must have a product name and pump number.';
+      if (!availableProducts.includes(p.productName)) return `Product "${p.productName}" is not available for this OMC.`;
+      if (uniquePumpNumbers.has(p.pumpNumber)) return `Pump number "${p.pumpNumber}" is duplicated.`;
+      uniquePumpNumbers.add(p.pumpNumber);
+      if (dispNumbers.length > 0) {
+        if (!p.dispenserNumber) return 'Please select a dispenser for each pump.';
+        if (!dispNumbers.includes(p.dispenserNumber)) return `Selected dispenser "${p.dispenserNumber}" does not exist.`;
+      }
+    }
+    return null;
+  };
+
   const handleAddSubmit = async (values: AddStationFormValues) => {
     setIsSubmittingAdd(true);
     try {
       const availableProducts = getAvailableProducts(values.omcId);
-      const validationError = validatePumps(addPumps, availableProducts);
+      const validationError = validateAddInputs(addDispensers, addPumps, availableProducts);
       if (validationError) {
         toast.error(validationError);
         return;
       }
+      const dispensersPayload = addDispensers.map((d) => ({
+        dispenserNumber: d.dispenserNumber,
+        pumps: addPumps
+          .filter((p) => p.dispenserNumber === d.dispenserNumber)
+          .map(({ productName, pumpNumber }) => ({ productName, pumpNumber })),
+      }));
+
       const payload = {
         name: values.stationName,
         omcId: parseInt(values.omcId),
@@ -293,11 +422,12 @@ const Stations: React.FC = () => {
         town: values.town,
         managerName: values.stationMasterName,
         managerContact: values.contactNumber,
-        pumps: addPumps,
+        dispensers: dispensersPayload,
       };
       await axios.post(`${apiBase}/auth/stations`, payload, {
         headers: getAuthHeaders(),
       });
+
       toast.success('Station added successfully!');
       const response = await axios.get<Station[]>(`${apiBase}/user/stations`, {
         params: { omcId: selectedOmcId },
@@ -333,6 +463,29 @@ const Stations: React.FC = () => {
   };
 
   const editPumpColumns = [
+    ...(editDispensers.length > 0
+      ? [
+          {
+            title: 'Dispenser',
+            dataIndex: 'dispenserNumber',
+            key: 'dispenserNumber',
+            render: (_: any, record: PumpFormValues, index: number) => (
+              <Select
+                value={record.dispenserNumber}
+                onChange={(value) => updateEditPump(index, 'dispenserNumber', value)}
+                placeholder="Select Dispenser"
+                className="w-full"
+              >
+                {editDispensers.map((d) => (
+                  <Option key={d.dispenserNumber} value={d.dispenserNumber}>
+                    {d.dispenserNumber}
+                  </Option>
+                ))}
+              </Select>
+            ),
+          },
+        ]
+      : []),
     {
       title: 'Product Name',
       dataIndex: 'productName',
@@ -376,6 +529,12 @@ const Stations: React.FC = () => {
   ];
 
   const addPumpColumns = [
+    {
+      title: 'Dispenser',
+      dataIndex: 'dispenserNumber',
+      key: 'dispenserNumber',
+      render: (_: any, record: PumpFormValues) => <span>{record.dispenserNumber || '-'}</span>,
+    },
     {
       title: 'Product Name',
       dataIndex: 'productName',
@@ -453,7 +612,7 @@ const Stations: React.FC = () => {
                   Location: {station.region}, {station.district}, {station.town}
                 </p>
                 <p className="text-sm text-[#625E5C]">
-                  Number of Pumps: {station.pumps.length}
+                  Number of Pumps: {station.pumps?.length ?? 0}
                 </p>
               </div>
 
@@ -535,6 +694,53 @@ const Stations: React.FC = () => {
               ]}
             >
               <Input />
+            </Form.Item>
+
+            <Form.Item label="Dispensers">
+              <div className="flex gap-3 mb-2">
+                <Input
+                  placeholder="Dispenser Number"
+                  value={editNewDispenserNumber}
+                  onChange={(e) => setEditNewDispenserNumber(e.target.value)}
+                  className="w-1/2"
+                />
+                <Button
+                  onClick={() => {
+                    const trimmed = editNewDispenserNumber.trim();
+                    if (!trimmed) return;
+                    if (editDispensers.some((d) => d.dispenserNumber === trimmed)) {
+                      toast.error('Dispenser number must be unique.');
+                      return;
+                    }
+                    setEditDispensers([...editDispensers, { dispenserNumber: trimmed }]);
+                    setEditNewDispenserNumber('');
+                  }}
+                  className="!bg-[#1F806E] hover:!bg-[#427c72] !border-none !text-white"
+                >
+                  Add Dispenser
+                </Button>
+              </div>
+              {editDispensers.length > 0 ? (
+                <ul className="list-disc pl-5 mb-4">
+                  {editDispensers.map((d, idx) => (
+                    <li key={`${d.dispenserNumber}-${idx}`} className="flex items-center justify-between pr-2">
+                      <span>{d.dispenserNumber}</span>
+                      <Button
+                        type="link"
+                        danger
+                        onClick={() => {
+                          setEditDispensers(editDispensers.filter((_, i) => i !== idx));
+                          setEditPumps(editPumps.filter((p) => p.dispenserNumber !== d.dispenserNumber));
+                        }}
+                      >
+                        <DeleteOutlined />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500 mb-2">Optionally add dispensers to reassign or add pumps.</p>
+              )}
             </Form.Item>
 
             <Form.Item label="Pumps">
@@ -665,14 +871,59 @@ const Stations: React.FC = () => {
             >
               <Input />
             </Form.Item>
+            <Form.Item label="Dispensers">
+              <div className="flex gap-3 mb-2">
+                <Input
+                  placeholder="Dispenser Number"
+                  value={newDispenserNumber}
+                  onChange={(e) => setNewDispenserNumber(e.target.value)}
+                  className="w-1/2"
+                />
+                <Button
+                  onClick={() => {
+                    const trimmed = newDispenserNumber.trim();
+                    if (!trimmed) return;
+                    if (addDispensers.some((d) => d.dispenserNumber === trimmed)) {
+                      toast.error('Dispenser number must be unique.');
+                      return;
+                    }
+                    setAddDispensers([...addDispensers, { dispenserNumber: trimmed }]);
+                    setNewDispenserNumber('');
+                  }}
+                  className="!bg-[#1F806E] hover:!bg-[#427c72] !border-none !text-white"
+                >
+                  Add Dispenser
+                </Button>
+              </div>
+              {addDispensers.length > 0 ? (
+                <ul className="list-disc pl-5 mb-4">
+                  {addDispensers.map((d, idx) => (
+                    <li key={`${d.dispenserNumber}-${idx}`} className="flex items-center justify-between pr-2">
+                      <span>{d.dispenserNumber}</span>
+                      <Button
+                        type="link"
+                        danger
+                        onClick={() => {
+                          setAddDispensers(addDispensers.filter((_, i) => i !== idx));
+                          setAddPumps(addPumps.filter((p) => p.dispenserNumber !== d.dispenserNumber));
+                        }}
+                      >
+                        <DeleteOutlined />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500 mb-2">Add one or more dispensers for this station.</p>
+              )}
+            </Form.Item>
+
             <Form.Item label="Pumps">
-              {/* <p className="text-sm text-gray-500 mb-2">
-                Use the form below to add pumps.
-              </p> */}
               <PumpForm
                 pumps={addPumps}
                 setPumps={setAddPumps}
                 availableProducts={getAvailableProducts(selectedOmccId)}
+                dispenserNumbers={addDispensers.map((d) => d.dispenserNumber)}
               />
               <Table
                 columns={addPumpColumns}
@@ -681,6 +932,7 @@ const Stations: React.FC = () => {
                 rowKey={(_, index) => (index !== undefined ? index.toString() : '')}
               />
             </Form.Item>
+
             <Form.Item>
               <Space>
                 <Button
