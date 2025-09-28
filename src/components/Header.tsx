@@ -10,7 +10,6 @@ const Header: React.FC = () => {
   const userEmail = 'doris.scott@example.com';
   const userRole = 'Admin';
 
-  // Notification Dropdown Content (Unchanged)
   const notificationMenu = (
     <div className="w-80 bg-white shadow-lg rounded-lg p-4 max-h-96 overflow-y-auto">
       <div className="flex justify-between items-center mb-3">
@@ -71,7 +70,6 @@ const Header: React.FC = () => {
     </div>
   );
 
-  // Profile Dropdown Content (Unchanged)
   const profileMenu = (
     <div className="w-64 bg-white shadow-lg rounded-lg p-4">
       <div className="flex items-center gap-3 mb-4">

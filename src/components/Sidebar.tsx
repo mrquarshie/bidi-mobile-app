@@ -122,21 +122,20 @@ const Sidebar: React.FC = () => {
     }
   };
 
-    // Handle logout confirmation
   const handleLogout = () => {
     console.log('handleLogout triggered');
-    setIsLogoutModalVisible(true); // Show the modal
+    setIsLogoutModalVisible(true);
   };
 
   const handleModalOk = () => {
     console.log('Modal confirmed, calling logout');
     logout();
-    setIsLogoutModalVisible(false); // Close the modal
+    setIsLogoutModalVisible(false);
   };
 
   const handleModalCancel = () => {
     console.log('Modal cancelled');
-    setIsLogoutModalVisible(false); // Close the modal
+    setIsLogoutModalVisible(false);
   };
 
   return (

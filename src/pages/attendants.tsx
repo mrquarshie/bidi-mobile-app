@@ -47,7 +47,7 @@ interface PumpAttendant {
   email: string;
   station: Station | null;
   omc: Omc | null;
-  pumps: Pump[]; // Add pumps to interface
+  pumps: Pump[];
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -59,7 +59,7 @@ const Attendants: React.FC = () => {
   const [filteredAttendants, setFilteredAttendants] = useState<PumpAttendant[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
   const [omcs, setOmcs] = useState<Omc[]>([]);
-  const [pumps, setPumps] = useState<Pump[]>([]); // State for pumps
+  const [pumps, setPumps] = useState<Pump[]>([]);
   const [loading, setLoading] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -191,7 +191,7 @@ const handleCreateAttendant = async (values: {
   nationalId: string;
   contact: string;
   gender: string;
-  cardImage?: any; // FileList from Upload component
+  cardImage?: any;
   email: string;
   password: string;
   stationId: number;
@@ -260,7 +260,7 @@ const handleCreateAttendant = async (values: {
   nationalId?: string;
   contact?: string;
   gender?: string;
-  cardImage?: any; // FileList from Upload component
+  cardImage?: any;
   email?: string;
   password?: string;
   stationId?: number;
@@ -543,7 +543,6 @@ const handleCreateAttendant = async (values: {
     return false; // Prevent automatic upload, handle it manually in form submission
   },
   onChange: ({ fileList }) => {
-    // Update form field with the selected file
     form.setFieldsValue({ cardImage: fileList });
     editForm.setFieldsValue({ cardImage: fileList });
   },
@@ -826,7 +825,7 @@ const handleCreateAttendant = async (values: {
                 }
                 return e && e.fileList;
               }}
-              rules={[{ required: false, message: 'Please upload a card image' }]} // Optional for edit
+              rules={[{ required: false, message: 'Please upload a card image' }]}
             >
               <Upload.Dragger {...uploadProps} className="w-full custom-dragger">
                 <p className="ant-upload-drag-icon">

@@ -22,7 +22,7 @@ const OMCRegistration: React.FC = () => {
     setSelectedProducts(value);
     // Preserve existing prices when updating products
     const updatedPrices = { ...productPrices };
-    // Remove prices for deselected products (optional, depending on requirements)
+    // Remove prices for deselected products
     Object.keys(updatedPrices).forEach((key) => {
       if (!value.includes(key)) {
         delete updatedPrices[key];
@@ -188,7 +188,7 @@ const OMCRegistration: React.FC = () => {
                   }
                   return e && e.fileList;
                 }}
-                rules={[{ required: false, message: 'Please upload an OMC logo' }]} // Made optional
+                rules={[{ required: false, message: 'Please upload an OMC logo' }]}
               >
                 <Dragger {...uploadProps} className="w-[90%] custom-dragger">
                   <p className="ant-upload-drag-icon">

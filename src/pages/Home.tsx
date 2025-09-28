@@ -70,7 +70,6 @@ const Home: React.FC = () => {
         const attendantsResponse = await axios.get<AttendantCountResponse>(`${apiBase}/user/attendant-count`, config);
         setTotalAttendants(attendantsResponse.data.attendants);
 
-        // Set dummy sales data
         setTotalSales(125000); // Dummy data
 
         // Fetch station counts for each OMC
