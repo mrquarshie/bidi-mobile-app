@@ -5,7 +5,7 @@ export class AuthService {
     try {
       await AsyncStorage.removeItem('userToken'); // Matches web localStorage
       // Add API call to invalidate session if needed
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Logout failed:', error);
       throw error;
     }
