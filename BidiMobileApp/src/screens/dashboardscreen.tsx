@@ -12,18 +12,9 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { AuthService } from '../services/AuthService';
+import { AuthService } from '../services/authservice';
 
-// Define stack params (extend as you add screens)
-type RootStackParamList = {
-  Dashboard: undefined;
-  EnterToken: undefined;
-  ManualSale: undefined;
-  History: undefined;
-  Reports: undefined;
-  Settings: undefined;
-  Login: undefined;
-};
+import { RootStackParamList } from '../types/navigation';
 
 type DashboardScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Dashboard'>;
 
